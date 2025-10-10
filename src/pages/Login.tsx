@@ -77,7 +77,7 @@ export default function Login() {
         </Button>
 
         <div className="flex items-center justify-between text-sm text-slate-400">
-          <Link to="/forgot" className="hover:text-white transition">
+          <Link to="/forgot-password" className="hover:text-white transition">
             Forgot password?
           </Link>
           <Link to="/register" className="hover:text-white transition">

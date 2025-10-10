@@ -8,8 +8,9 @@ export const authService = {
     localStorage.setItem("token", parsed.token);
     return parsed;
   },
-  async forgotPassword(payload: ForgotPasswordRequest): Promise<void> {
-    const req = ForgotPasswordRequestSchema.parse(payload);
-    await http.post("/auth/forgot-password", req);
+  async forgotPassword(payload: ForgotPasswordRequest) {
+    const body = { usernameOrEmail: payload.identifier };
+    const { data } = await http.post("/auth/forgot-password", body);
+    return data; 
   },
 };

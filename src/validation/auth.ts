@@ -17,15 +17,7 @@ export const LoginResponseSchema = z.object({
     .optional(),
 });
 export const ForgotPasswordRequestSchema = z.object({
-  identifier: z
-    .string()
-    .trim()
-    .min(3, "Ingresa tu usuario o correo")
-    .refine(
-      (v) =>
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || /^[a-zA-Z0-9._-]{3,}$/.test(v),
-      "Ingresa un correo válido o un usuario válido"
-    ),
+ identifier: z.string().trim().min(3, "Ingresa tu usuario o correo"),
 });
 
 export type ForgotPasswordRequest = z.infer<typeof ForgotPasswordRequestSchema>;
