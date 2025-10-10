@@ -1,22 +1,32 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
+import ForgotPassword from "../pages/ForgotPassword";
+import ProtectedRoute from "./ProtectedRoute";
 import AppLayout from "../layouts/AppLayout";
 import Dashboard from "../pages/Dashboard";
-import ForgotPassword from "../pages/ForgotPassword";
 
 
 export const router = createBrowserRouter([
-  { path: "/", element: <Login /> },
+  // 👉 redirige raíz a /login
+  { path: "/", element: <Navigate to="/login" replace /> },
+
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
-  {path: "/forgot-password", element: <ForgotPassword />},
+  { path: "/forgot-password", element: <ForgotPassword /> },
 
+  // 👉 bloque protegido
   {
-    path: "/",
-    element: <AppLayout />,
+    element: <ProtectedRoute />,
     children: [
-      { path: "/dashboard", element: <Dashboard /> },
+      {
+        element: <AppLayout />,
+        children: [
+          { path: "/dashboard", element: <Dashboard /> },
+        ],
+      },
     ],
   },
+
+  { path: "*", element: <div style={{ padding: 24 }}>404: Página no encontrada</div> },
 ]);
