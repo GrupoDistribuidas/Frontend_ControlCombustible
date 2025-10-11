@@ -17,7 +17,7 @@ export default function Dashboard() {
       <div className="mt-2 text-slate-400">
         Rol actual: {rolNombre}
       </div>
-      <VisibleIf condition={hasRole(user, "ADMIN")}>
+      <VisibleIf condition={hasRole(user, "ADMINISTRADOR")}>
         <div className="mt-4 p-4 rounded bg-emerald-900/20 text-emerald-300">
           Solo visible para administradores.
         </div>
