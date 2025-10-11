@@ -1,18 +1,23 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+
 import { LoginRequestSchema, type LoginRequest } from "../validation/auth";
 import { authService } from "../services/auth.service";
 import AuthLayout from "../layouts/AuthLayout";
 import FuelWiseLogo from "../components/FuelWiseLogo";
 import TextField from "../components/TextField";
 import Button from "../components/Button";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
+  const { login } = useAuth(); // ✅ acceso al contexto global
   const nav = useNavigate();
+  const location = useLocation(); // para saber desde dónde venía
   const [serverError, setServerError] = useState<string | null>(null);
 
+  // Formulario validado con Zod
   const {
     register,
     handleSubmit,
@@ -23,11 +28,17 @@ export default function Login() {
     mode: "onTouched",
   });
 
+  // ✅ Manejo de login y guardado de sesión
   const onSubmit = async (values: LoginRequest) => {
     setServerError(null);
     try {
-      await authService.login(values);
-      nav("/dashboard");
+      const res = await authService.login(values);
+
+      login(res.token, res.user);
+
+      // Redirige a la ruta protegida o al dashboard por defecto
+      const from = (location.state as { from?: Location })?.from?.pathname || "/dashboard";
+      nav(from, { replace: true });
     } catch (err: any) {
       setServerError(err.message ?? "Error inesperado");
     }
