@@ -110,26 +110,6 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-lime-400/5 pointer-events-none" />
 
         <div className="relative flex flex-col h-full">
-          {/* Encabezado del menú */}
-          <div className="flex items-center justify-between p-6 border-b border-emerald-800/30">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-lime-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <Menu className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="font-bold text-lg text-slate-100">Menú</h2>
-                <p className="text-xs text-slate-400">Navegación principal</p>
-              </div>
-            </div>
-            <button
-              onClick={closeMenu}
-              className="w-9 h-9 rounded-lg bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 hover:text-white transition-all duration-200 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-              aria-label="Cerrar menú"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
           {/* Opciones */}
           <nav className="flex-1 p-4 overflow-y-auto">
             <ul className="space-y-2">
