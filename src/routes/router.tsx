@@ -5,6 +5,7 @@ import ForgotPassword from "../pages/ForgotPassword";
 import ProtectedRoute from "./ProtectedRoute";
 import AppLayout from "../layouts/AppLayout";
 import Dashboard from "../pages/Dashboard";
+import Vehicles from "../pages/Vehicles";
 
 
 export const router = createBrowserRouter([
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { path: "/dashboard", element: <Dashboard /> },
+          { path: "/vehicles", element: <Vehicles /> },
         ],
       },
     ],
