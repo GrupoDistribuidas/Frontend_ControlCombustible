@@ -7,26 +7,32 @@ export const http = axios.create({
 
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 
 http.interceptors.response.use(
-  (r) => r,
+  (response) => response,
   (error) => {
     const status = error?.response?.status;
+
     if (status === 401) {
+      console.warn("Token expirado o no autorizado, redirigiendo al login...");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      if (location.pathname !== "/login") {
+      if (!location.pathname.includes("/login")) {
         window.location.replace("/login");
       }
     }
+
     const msg =
       error?.response?.data?.message ||
       error?.response?.data?.error ||
       error.message ||
-      "Error de red";
+      "Error de red o conexión con el servidor";
+
     return Promise.reject(new Error(msg));
   }
 );

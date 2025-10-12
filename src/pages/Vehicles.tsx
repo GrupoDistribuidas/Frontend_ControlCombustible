@@ -1,268 +1,397 @@
-import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { hasRole, ROLES } from "../services/roles.service";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  VehicleCreateSchema,
+  type TipoMaquinaria,
+  type VehicleCreateInput,
+} from "../validation/vehicles";
 import { vehiclesService } from "../services/vehicles.service";
-import type { Vehicle } from "../services/vehicles.service";
-import VisibleIf from "../components/VisibleIf";
-import Button from "../components/Button";
 import TextField from "../components/TextField";
+import Button from "../components/Button";
+import { Fuel, Gauge, Truck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
+const MAX_TANQUE = 500;
 
 export default function Vehicles() {
-  const { user } = useAuth();
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState({
-    marca: "",
-    modelo: "",
-    disponible: "",
+  const [tipos, setTipos] = useState<TipoMaquinaria[]>([]);
+  const [loadingTipos, setLoadingTipos] = useState(true);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
+  const handleReset = () => {
+    reset();                 // limpia el formulario
+    setOkMsg(null);          // oculta “Vehículo creado correctamente.”
+    setServerError(null);    // por si quedó algún error
+  };
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<VehicleCreateInput>({
+    resolver: zodResolver(VehicleCreateSchema),
+    defaultValues: {
+      nombre: "",
+      placa: "",
+      marca: "",
+      modelo: "",
+      tipoMaquinariaId: 0,
+      disponible: "", // ✅ placeholder inicial
+      consumoCombustibleKm: 0.1,
+      capacidadCombustible: 1,
+    },
+    mode: "onTouched",
   });
 
-  const canViewVehicles = hasRole(user, "ADMINISTRADOR") || hasRole(user, "SUPERVISOR");
+  // 🔎 valores dinámicos
+  const capacidad = Number(watch("capacidadCombustible") ?? 0);
+  const consumo = Number(watch("consumoCombustibleKm") ?? 0);
 
+  const porcentaje = useMemo(() => {
+    const p = Math.max(0, Math.min(100, (capacidad / MAX_TANQUE) * 100));
+    return Number.isFinite(p) ? p : 0;
+  }, [capacidad]);
+
+  // carga de tipos de maquinaria
   useEffect(() => {
-    if (canViewVehicles) {
-      loadVehicles();
-    } else {
-      setLoading(false);
-    }
-  }, [canViewVehicles]);
+    (async () => {
+      try {
+        setLoadingTipos(true);
+        const data = await vehiclesService.getTipos();
+        setTipos(Array.isArray(data) ? data : []);
 
-  const loadVehicles = async () => {
+      } catch (e: any) {
+        setServerError(e.message ?? "No se pudieron cargar los tipos de maquinaria");
+      } finally {
+        setLoadingTipos(false);
+      }
+    })();
+  }, []);
+  useEffect(() => {
+    if (!okMsg) return;
+    const timeout = setTimeout(() => setOkMsg(null), 3500); // 3.5s
+    return () => clearTimeout(timeout);
+  }, [okMsg]);
+
+  // 🧾 envío
+  const onSubmit = async (values: VehicleCreateInput) => {
+    setServerError(null);
+    setOkMsg(null);
     try {
-      setLoading(true);
-      const data = await vehiclesService.getAll();
-      console.log("Vehicles data:", data);
-      setVehicles(data);
-    } catch (error) {
-      console.error("Error loading vehicles:", error);
-      setVehicles([]);
-    } finally {
-      setLoading(false);
+      await vehiclesService.createVehicle(values as any); // Zod transforma el schema
+      setOkMsg("✅ Vehículo creado correctamente.");
+      reset();
+    } catch (e: any) {
+      setServerError(e.message ?? "❌ No se pudo crear el vehículo");
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      await loadVehicles();
-      return;
-    }
-    try {
-      setLoading(true);
-      const data = await vehiclesService.searchByTerm(searchTerm);
-      setVehicles(data);
-    } catch (error) {
-      console.error("Error searching vehicles:", error);
-      setVehicles([]);
-    } finally {
-      setLoading(false);
-    }
+  // 🔒 bloqueo de negativos
+  const blockMinusKey: React.KeyboardEventHandler<HTMLInputElement> = (ev) => {
+    if (ev.key === "-" || ev.key === "e") ev.preventDefault();
   };
-
-  const handleFilter = async () => {
-    try {
-      setLoading(true);
-      const activeFilters = Object.fromEntries(
-        Object.entries(filters).filter(([_, value]) => value.trim() !== "")
-      );
-      const data = await vehiclesService.search(activeFilters);
-      setVehicles(data);
-    } catch (error) {
-      console.error("Error filtering vehicles:", error);
-      setVehicles([]);
-    } finally {
-      setLoading(false);
-    }
+  const clampNonNegative: React.FormEventHandler<HTMLInputElement> = (ev) => {
+    const el = ev.currentTarget;
+    const num = Number(el.value);
+    if (Number.isNaN(num) || num < 0) el.value = "0";
   };
-
-  const handleSearchKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  const handleFilterKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleFilter();
-    }
-  };
-
-  const exportToCSV = () => {
-    if (vehicles.length === 0) return;
-
-    const headers = ["ID", "Nombre", "Placa", "Marca", "Modelo", "Disponible", "Consumo (L/Km)", "Capacidad (L)"];
-    const csvContent = [
-      headers.join(","),
-      ...vehicles.map(vehicle => [
-        vehicle.id,
-        `"${vehicle.nombre}"`,
-        `"${vehicle.placa}"`,
-        `"${vehicle.marca}"`,
-        `"${vehicle.modelo}"`,
-        `"${vehicle.disponible}"`,
-        vehicle.consumoCombustibleKm,
-        vehicle.capacidadCombustible
-      ].join(","))
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "vehiculos.csv");
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  if (!canViewVehicles) {
-    return (
-      <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6">
-        <h1 className="text-xl font-semibold text-red-400">Acceso Denegado</h1>
-        <p className="mt-2 text-red-300">
-          No tienes permisos suficientes para acceder a esta sección.
-          Solo usuarios con rol Administrador o Supervisor pueden visualizar los datos de vehículos.
-        </p>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h1 className="text-xl font-semibold">Gestión de Vehículos</h1>
-        <p className="mt-2 text-slate-300">
-          Visualiza y administra la información de los vehículos registrados en el sistema.
-        </p>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h2 className="text-lg font-medium mb-4">Buscar y Filtrar</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Buscar por término</label>
-            <TextField
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={handleSearchKeyPress}
-              placeholder="Nombre, placa, marca..."
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Marca</label>
-            <TextField
-              value={filters.marca}
-              onChange={(e) => setFilters(prev => ({ ...prev, marca: e.target.value }))}
-              onKeyPress={handleFilterKeyPress}
-              placeholder="Ej: Volvo"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Modelo</label>
-            <TextField
-              value={filters.modelo}
-              onChange={(e) => setFilters(prev => ({ ...prev, modelo: e.target.value }))}
-              onKeyPress={handleFilterKeyPress}
-              placeholder="Ej: FH16"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">Disponibilidad</label>
-            <select
-              value={filters.disponible}
-              onChange={(e) => setFilters(prev => ({ ...prev, disponible: e.target.value }))}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todos los estados</option>
-              <option value="Disponible">Disponible</option>
-              <option value="En mantenimiento">En mantenimiento</option>
-              <option value="No Disponible">No Disponible</option>
-            </select>
-          </div>
+    <div className="mx-auto max-w-6xl px-8 py-12">
+      {/* Encabezado */}
+      <div className="flex items-center gap-3 mb-10">
+        <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/30">
+          <Fuel className="text-emerald-400 w-8 h-8" />
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={handleSearch} disabled={loading}>
-            Buscar
-          </Button>
-          <Button onClick={handleFilter} disabled={loading} className="bg-blue-600 hover:bg-blue-700">
-            Aplicar Filtros
-          </Button>
-          <Button onClick={loadVehicles} disabled={loading} className="bg-gray-600 hover:bg-gray-700">
-            Limpiar
-          </Button>
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight text-emerald-400">
+            Gestión de Vehículos
+          </h1>
+          <p className="text-slate-400">
+            Registra un nuevo vehículo en el sistema de control de combustible.
+          </p>
         </div>
       </div>
 
-      {/* Export Button */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-lg font-medium">Lista de Vehículos</h2>
-          <Button onClick={exportToCSV} disabled={vehicles.length === 0} className="bg-green-600 hover:bg-green-700">
-            Exportar a CSV
-          </Button>
-        </div>
-      </div>
+      {/* Layout principal */}
+      <div className="grid gap-8 md:grid-cols-3">
+        {/* Formulario */}
+        <div className="md:col-span-2 rounded-2xl border border-white/10 bg-transparent p-8 shadow-2xl shadow-emerald-500/5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Nombre */}
+              <div>
+                <label className="mb-1 block text-sm text-slate-300 font-medium">
+                  Nombre del Vehículo
+                </label>
+                <TextField
+                  placeholder="Ej. Camión de Carga"
+                  {...register("nombre")}
+                  className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
+                />
+                {errors.nombre && (
+                  <p className="mt-1 text-sm text-red-400">{errors.nombre.message}</p>
+                )}
+              </div>
 
-      {/* Vehicles Table */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-        {loading ? (
-          <div className="text-center py-8">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <p className="mt-2 text-slate-400">Cargando vehículos...</p>
-          </div>
-        ) : vehicles.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-slate-400">No se encontraron vehículos.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-700">
-                  <th className="text-left py-3 px-4 font-medium text-slate-300">ID</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-300">Nombre</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-300">Placa</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-300">Marca</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-300">Modelo</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-300">Disponible</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-300">Consumo (L/Km)</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-300">Capacidad (L)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vehicles.map((vehicle, index) => (
-                  <tr key={vehicle.id || index} className="border-b border-slate-800 hover:bg-slate-800/50">
-                    <td className="py-3 px-4 text-slate-100">{vehicle.id}</td>
-                    <td className="py-3 px-4 text-slate-100">{vehicle.nombre}</td>
-                    <td className="py-3 px-4 text-slate-100 font-mono">{vehicle.placa}</td>
-                    <td className="py-3 px-4 text-slate-100">{vehicle.marca}</td>
-                    <td className="py-3 px-4 text-slate-100">{vehicle.modelo}</td>
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        vehicle.disponible === "Disponible"
-                          ? "bg-green-500/20 text-green-400"
-                          : vehicle.disponible === "En mantenimiento"
-                          ? "bg-yellow-500/20 text-yellow-400"
-                          : "bg-red-500/20 text-red-400"
-                      }`}>
-                        {vehicle.disponible}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-100">{vehicle.consumoCombustibleKm}</td>
-                    <td className="py-3 px-4 text-slate-100">{vehicle.capacidadCombustible}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {vehicles.length > 10 && (
-              <div className="mt-4 text-center text-slate-400 text-sm">
-                Mostrando {vehicles.length} vehículos
+              {/* Placa */}
+              <div>
+                <label className="mb-1 block text-sm text-slate-300 font-medium">Placa</label>
+                <TextField
+                  placeholder="Ej. ABC-1234"
+                  {...register("placa")}
+                  className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
+                />
+                {errors.placa && (
+                  <p className="mt-1 text-sm text-red-400">{errors.placa.message}</p>
+                )}
+              </div>
+
+              {/* Marca */}
+              <div>
+                <label className="mb-1 block text-sm text-slate-300 font-medium">Marca</label>
+                <TextField
+                  placeholder="Ej. Volvo"
+                  {...register("marca")}
+                  className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
+                />
+                {errors.marca && (
+                  <p className="mt-1 text-sm text-red-400">{errors.marca.message}</p>
+                )}
+              </div>
+
+              {/* Modelo */}
+              <div>
+                <label className="mb-1 block text-sm text-slate-300 font-medium">Modelo</label>
+                <TextField
+                  placeholder="Ej. FH16"
+                  {...register("modelo")}
+                  className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
+                />
+                {errors.modelo && (
+                  <p className="mt-1 text-sm text-red-400">{errors.modelo.message}</p>
+                )}
+              </div>
+
+              {/* Tipo de maquinaria */}
+              <div>
+                <label className="mb-1 block text-sm text-slate-300 font-medium">
+                  Tipo de maquinaria
+                </label>
+                <select
+                  disabled={loadingTipos}
+                  className={`w-full rounded-lg px-4 py-3 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-0 text-slate-200 appearance-none ${loadingTipos ? "opacity-60 cursor-not-allowed" : ""
+                    }`}
+                  {...register("tipoMaquinariaId", {
+                    setValueAs: (v) => v === "" ? undefined : Number(String(v).replace(",", ".")),
+                  })}
+                >
+                  <option value={0} disabled>
+                    {loadingTipos ? "Cargando tipos..." : "Seleccione una maquinaria"}
+                  </option>
+                  {tipos.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nombre}
+                    </option>
+                  ))}
+                </select>
+                {errors.tipoMaquinariaId && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {errors.tipoMaquinariaId.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Estado del vehículo */}
+              <div>
+                <label className="mb-1 block text-sm text-slate-300 font-medium">
+                  Estado del vehículo
+                </label>
+                <select
+                  className="w-full rounded-lg px-4 py-3 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 text-slate-200 appearance-none"
+                  {...register("disponible")}
+                >
+                  <option value="" disabled>
+                    Seleccione una disponibilidad
+                  </option>
+                  <option value="Disponible">Disponible</option>
+                  <option value="En Mantenimiento">En Mantenimiento</option>
+                  <option value="No Disponible">No Disponible</option>
+                </select>
+                {errors.disponible && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {errors.disponible.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Consumo */}
+              <div>
+                <label className="mb-1 block text-sm text-slate-300 font-medium">
+                  Consumo de combustible (L/Km)
+                </label>
+                <TextField
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  placeholder="Ej. 0.35"
+                  onKeyDown={blockMinusKey}
+                  onInput={clampNonNegative}
+                  {...register("consumoCombustibleKm", {
+                    setValueAs: (v) => v === "" ? undefined : Number(String(v).replace(",", ".")),
+                  })}
+                  className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  No se permiten valores negativos.
+                </p>
+                {errors.consumoCombustibleKm && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {errors.consumoCombustibleKm.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Capacidad */}
+              <div>
+                <label className="mb-1 block text-sm text-slate-300 font-medium">
+                  Capacidad del tanque (L)
+                </label>
+                <TextField
+                  type="number"
+                  step="1"
+                  min={0}
+                  placeholder="Ej. 500"
+                  onKeyDown={blockMinusKey}
+                  onInput={clampNonNegative}
+                  {...register("capacidadCombustible", {
+                    setValueAs: (v) => v === "" ? undefined : Number(v),
+                  })}
+                  className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
+                />
+                <p className="mt-1 text-xs text-slate-400">
+                  No se permiten valores negativos.
+                </p>
+                {errors.capacidadCombustible && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {errors.capacidadCombustible.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* mensajes */}
+            {serverError && (
+              <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                {serverError}
               </div>
             )}
+            {okMsg && (
+              <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
+                {okMsg}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                className="bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200"
+                onClick={() => handleReset()}
+              >
+                Limpiar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-gradient-to-r from-emerald-500 to-lime-500 hover:brightness-110 text-white font-semibold shadow-lg shadow-emerald-500/20"
+              >
+                {isSubmitting ? "Guardando..." : "Registrar vehículo"}
+              </Button>
+            </div>
+          </form>
+        </div>
+        {/* Indicador lateral */}
+        <aside className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 md:sticky md:top-8 h-fit">
+          <div className="flex items-center gap-2 mb-4">
+            <Gauge className="text-emerald-400 w-5 h-5" />
+            <h3 className="font-semibold">Indicador de tanque</h3>
           </div>
-        )}
+          {/* SVG tanque */}
+          <div className="relative mx-auto mb-4 w-56">
+            <svg viewBox="0 0 160 140" className="w-full">
+              <rect
+                x="20"
+                y="10"
+                width="120"
+                height="120"
+                rx="16"
+                fill="#0f172a"
+                stroke="rgba(16,185,129,.5)"
+                strokeWidth="2"
+              />
+              <rect
+                x="65"
+                y="0"
+                width="30"
+                height="16"
+                rx="6"
+                fill="#0f172a"
+                stroke="rgba(16,185,129,.5)"
+                strokeWidth="2"
+              />
+              <clipPath id="tank-clip">
+                <rect x="20" y="10" width="120" height="120" rx="16" />
+              </clipPath>
+              <g clipPath="url(#tank-clip)">
+                <rect
+                  x="20"
+                  y={10 + (120 - (120 * porcentaje) / 100)}
+                  width="120"
+                  height={(120 * porcentaje) / 100}
+                  fill="url(#grad)"
+                />
+              </g>
+              <defs>
+                <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" />
+                  <stop offset="100%" stopColor="#84cc16" />
+                </linearGradient>
+              </defs>
+            </svg>
+            <div className="pointer-events-none absolute inset-0 rounded-2xl blur-2xl opacity-30 bg-gradient-to-b from-emerald-400/30 to-lime-400/20" />
+          </div>
+          {/* KPIs */}
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Capacidad</span>
+              <span className="font-semibold text-slate-200">
+                {isFinite(capacidad) ? capacidad : 0} L
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">% de llenado</span>
+              <span className="font-semibold text-emerald-400">
+                {porcentaje.toFixed(0)}%
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-slate-400">Consumo</span>
+              <span className="font-semibold text-slate-200">
+                {isFinite(consumo) ? consumo : 0} L/Km
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
+            <Truck className="w-4 h-4" />
+            <span>
+              Máx. visual: {MAX_TANQUE} L — ajusta en código si tu flota usa otros tanques.
+            </span>
+          </div>
+        </aside>
+      </div>
+      <div className="mt-10 text-center text-xs text-slate-500">
+        Sistema de Control de Combustible • © 2025
       </div>
     </div>
   );
