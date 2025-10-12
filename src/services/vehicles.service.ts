@@ -16,12 +16,20 @@ export const vehiclesService = {
 
     return [];
   },
+  async checkPlacaExists(placa: string): Promise<boolean> {
+    const { data } = await http.get(`/vehicles/check-placa/${placa}`);
+    return data.exists;
+  },
   async createVehicle(payload: VehicleCreate) {
     const apiPayload = {
-        ...payload,
-        disponible: DISP_MAP[payload.disponible] || "No Disponible",
+      ...payload,
+      disponible: DISP_MAP[payload.disponible] || "No Disponible",
     };
     const { data } = await http.post("/api/Vehiculos", apiPayload);
     return data;
+  },
+  async getVehicles(): Promise<any[]> {
+    const { data } = await http.get("/api/Vehiculos");
+    return Array.isArray(data) ? data : data?.data || [];
   },
 };

@@ -12,22 +12,23 @@ import { Fuel, Gauge, Truck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const MAX_TANQUE = 500;
+const PLACA_RE = /^[A-Z]{3}-\d{4}$/; // AAA-1234
 
 export default function Vehicles() {
   const [tipos, setTipos] = useState<TipoMaquinaria[]>([]);
   const [loadingTipos, setLoadingTipos] = useState(true);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
-  const handleReset = () => {
-    reset();                 // limpia el formulario
-    setOkMsg(null);          // oculta “Vehículo creado correctamente.”
-    setServerError(null);    // por si quedó algún error
-  };
+
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<VehicleCreateInput>({
     resolver: zodResolver(VehicleCreateSchema),
@@ -37,14 +38,20 @@ export default function Vehicles() {
       marca: "",
       modelo: "",
       tipoMaquinariaId: 0,
-      disponible: "", // ✅ placeholder inicial
+      disponible: "",
       consumoCombustibleKm: 0.1,
       capacidadCombustible: 1,
     },
     mode: "onTouched",
   });
 
-  // 🔎 valores dinámicos
+  const handleReset = () => {
+    reset();
+    setOkMsg(null);
+    setServerError(null);
+  };
+
+  // valores dinámicos
   const capacidad = Number(watch("capacidadCombustible") ?? 0);
   const consumo = Number(watch("consumoCombustibleKm") ?? 0);
 
@@ -53,14 +60,13 @@ export default function Vehicles() {
     return Number.isFinite(p) ? p : 0;
   }, [capacidad]);
 
-  // carga de tipos de maquinaria
+  // cargar tipos
   useEffect(() => {
     (async () => {
       try {
         setLoadingTipos(true);
         const data = await vehiclesService.getTipos();
         setTipos(Array.isArray(data) ? data : []);
-
       } catch (e: any) {
         setServerError(e.message ?? "No se pudieron cargar los tipos de maquinaria");
       } finally {
@@ -68,26 +74,76 @@ export default function Vehicles() {
       }
     })();
   }, []);
+
+  // cargar vehículos (para validar unicidad)
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingVehicles(true);
+        const data = await vehiclesService.getVehicles();
+        setVehicles(Array.isArray(data) ? data : []);
+      } catch (e: any) {
+        setServerError(e.message ?? "No se pudieron cargar los vehículos");
+      } finally {
+        setLoadingVehicles(false);
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     if (!okMsg) return;
-    const timeout = setTimeout(() => setOkMsg(null), 3500); // 3.5s
+    const timeout = setTimeout(() => setOkMsg(null), 3500);
     return () => clearTimeout(timeout);
   }, [okMsg]);
 
-  // 🧾 envío
+  // envío
   const onSubmit = async (values: VehicleCreateInput) => {
     setServerError(null);
     setOkMsg(null);
+
+    // Normaliza placa (por si llega en minúsculas)
+    const placa = String(values.placa).toUpperCase().trim();
+    const formatoOk = PLACA_RE.test(placa);
+    const existe = vehicles.some(
+      (v) => String(v.placa || "").toUpperCase().trim() === placa
+    );
+
+    if (!formatoOk) {
+      setError("placa", {
+        type: "validate",
+        message: "La placa debe tener el formato AAA-1234 (tres letras y cuatro números)",
+      });
+      return;
+    }
+    if (existe) {
+      setError("placa", {
+        type: "validate",
+        message: `La placa ${placa} ya está registrada.`,
+      });
+      return;
+    }
+
     try {
-      await vehiclesService.createVehicle(values as any); // Zod transforma el schema
+      await vehiclesService.createVehicle({ ...values, placa } as any);
       setOkMsg("✅ Vehículo creado correctamente.");
       reset();
+      // refrescar lista para que aparezca el nuevo registro
+      const data = await vehiclesService.getVehicles();
+      setVehicles(Array.isArray(data) ? data : []);
     } catch (e: any) {
-      setServerError(e.message ?? "❌ No se pudo crear el vehículo");
+      const errorMsg = e.message ?? "❌ No se pudo crear el vehículo";
+      if (errorMsg.toLowerCase().includes("placa")) {
+        setError("placa", {
+          type: "server",
+          message: "La placa ya está registrada. Por favor, use una placa diferente.",
+        });
+      } else {
+        setServerError(errorMsg);
+      }
     }
   };
 
-  // 🔒 bloqueo de negativos
+  // bloqueo de negativos
   const blockMinusKey: React.KeyboardEventHandler<HTMLInputElement> = (ev) => {
     if (ev.key === "-" || ev.key === "e") ev.preventDefault();
   };
@@ -140,9 +196,22 @@ export default function Vehicles() {
                 <label className="mb-1 block text-sm text-slate-300 font-medium">Placa</label>
                 <TextField
                   placeholder="Ej. ABC-1234"
-                  {...register("placa")}
+                  {...register("placa", {
+                    setValueAs: (v) => String(v ?? "").toUpperCase().replace(/\s+/g, ""),
+                    validate: {
+                      formato: (val) =>
+                        PLACA_RE.test(val || "") ||
+                        "La placa debe tener el formato AAA-1234 (tres letras y cuatro números)",
+                      unica: (val) =>
+                        !vehicles.some(
+                          (v) => String(v.placa || "").toUpperCase().trim() === String(val || "").toUpperCase().trim()
+                        ) || "La placa ya está registrada.",
+                    },
+                  })}
+                  onChange={() => clearErrors("placa")}
                   className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
                 />
+                <p className="mt-1 text-xs text-slate-400">Formato requerido: AAA-1234.</p>
                 {errors.placa && (
                   <p className="mt-1 text-sm text-red-400">{errors.placa.message}</p>
                 )}
@@ -181,10 +250,12 @@ export default function Vehicles() {
                 </label>
                 <select
                   disabled={loadingTipos}
-                  className={`w-full rounded-lg px-4 py-3 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-0 text-slate-200 appearance-none ${loadingTipos ? "opacity-60 cursor-not-allowed" : ""
-                    }`}
+                  className={`w-full rounded-lg px-4 py-3 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-0 text-slate-200 appearance-none ${
+                    loadingTipos ? "opacity-60 cursor-not-allowed" : ""
+                  }`}
                   {...register("tipoMaquinariaId", {
-                    setValueAs: (v) => v === "" ? undefined : Number(String(v).replace(",", ".")),
+                    setValueAs: (v) => (v === "" ? undefined : Number(String(v).replace(",", "."))),
+                    validate: (v) => Number(v) > 0 || "Selecciona un tipo de maquinaria",
                   })}
                 >
                   <option value={0} disabled>
@@ -210,7 +281,9 @@ export default function Vehicles() {
                 </label>
                 <select
                   className="w-full rounded-lg px-4 py-3 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 text-slate-200 appearance-none"
-                  {...register("disponible")}
+                  {...register("disponible", {
+                    validate: (v) => (v ? true : "Seleccione una disponibilidad"),
+                  })}
                 >
                   <option value="" disabled>
                     Seleccione una disponibilidad
@@ -220,9 +293,7 @@ export default function Vehicles() {
                   <option value="No Disponible">No Disponible</option>
                 </select>
                 {errors.disponible && (
-                  <p className="mt-1 text-sm text-red-400">
-                    {errors.disponible.message}
-                  </p>
+                  <p className="mt-1 text-sm text-red-400">{errors.disponible.message}</p>
                 )}
               </div>
 
@@ -239,7 +310,8 @@ export default function Vehicles() {
                   onKeyDown={blockMinusKey}
                   onInput={clampNonNegative}
                   {...register("consumoCombustibleKm", {
-                    setValueAs: (v) => v === "" ? undefined : Number(String(v).replace(",", ".")),
+                    setValueAs: (v) =>
+                      v === "" ? undefined : Number(String(v).replace(",", ".")),
                   })}
                   className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
                 />
@@ -266,7 +338,7 @@ export default function Vehicles() {
                   onKeyDown={blockMinusKey}
                   onInput={clampNonNegative}
                   {...register("capacidadCombustible", {
-                    setValueAs: (v) => v === "" ? undefined : Number(v),
+                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
                   })}
                   className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
                 />
@@ -297,7 +369,7 @@ export default function Vehicles() {
               <Button
                 type="button"
                 className="bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200"
-                onClick={() => handleReset()}
+                onClick={handleReset}
               >
                 Limpiar
               </Button>
@@ -311,6 +383,7 @@ export default function Vehicles() {
             </div>
           </form>
         </div>
+
         {/* Indicador lateral */}
         <aside className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 md:sticky md:top-8 h-fit">
           <div className="flex items-center gap-2 mb-4">
@@ -361,6 +434,7 @@ export default function Vehicles() {
             </svg>
             <div className="pointer-events-none absolute inset-0 rounded-2xl blur-2xl opacity-30 bg-gradient-to-b from-emerald-400/30 to-lime-400/20" />
           </div>
+
           {/* KPIs */}
           <div className="space-y-2 text-sm">
             <div className="flex items-center justify-between">
@@ -390,6 +464,7 @@ export default function Vehicles() {
           </div>
         </aside>
       </div>
+
       <div className="mt-10 text-center text-xs text-slate-500">
         Sistema de Control de Combustible • © 2025
       </div>

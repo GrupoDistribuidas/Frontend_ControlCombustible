@@ -35,7 +35,7 @@ const IntRequeridoPositivo = (msg = "Selecciona un tipo válido") =>
 
 export const VehicleCreateSchema = z.object({
   nombre: z.string().trim().min(1, "El nombre no puede estar vacío"),
-  placa: z.string().trim().min(1, "La placa no puede estar vacía"),
+  placa: z.string().trim().toUpperCase().min(1, "La placa no puede estar vacía").regex(/^[A-Z]{3}-\d{4}$/, "La placa debe tener el formato XXX-1234 (tres letras mayúsculas, guión, cuatro dígitos)"),
   marca: z.string().trim().min(1, "La marca no puede estar vacía"),
   modelo: z.string().trim().min(1, "El modelo no puede estar vacío"),
 
