@@ -36,10 +36,10 @@ export default function Vehicles() {
   const [editingVehicle, setEditingVehicle] = useState<any>(null);
 
   // permisos
-  const canViewVehicles = user?.role === "Administrador" || user?.role === "Supervisor";
-  const canCreateVehicles = user?.role === "Administrador";
-  const canEditVehicles = user?.role === "Administrador";
-  const canExportVehicles = user?.role === "Administrador" || user?.role === "Supervisor";
+  const canViewVehicles = user?.role === "Administrador" || user?.role === "Supervisor" || user?.role === "Operador";
+  const canCreateVehicles = user?.role === "Administrador" || user?.role === "Supervisor"  || user?.role === "Operador";
+  const canEditVehicles = user?.role === "Administrador" || user?.role === "Supervisor";
+  const canExportVehicles = user?.role === "Administrador" || user?.role === "Supervisor" || user?.role === "Operador";
 
   // map de tipos
   const tiposMap = useMemo(() => {
