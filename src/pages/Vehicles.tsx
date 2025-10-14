@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { vehiclesService } from "../services/vehicles.service";
 import TextField from "../components/TextField";
 import Button from "../components/Button";
-import { Fuel, Truck, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { Fuel, Truck, ChevronLeft, ChevronRight, Download, Edit } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import type { TipoMaquinaria } from "../validation/vehicles";
 import Modal from "../components/Modal";
@@ -33,10 +33,12 @@ export default function Vehicles() {
 
   // modal
   const [isModalOpen, setModalOpen] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<any>(null);
 
   // permisos
   const canViewVehicles = user?.role === "Administrador" || user?.role === "Supervisor";
   const canCreateVehicles = user?.role === "Administrador";
+  const canEditVehicles = user?.role === "Administrador";
   const canExportVehicles = user?.role === "Administrador" || user?.role === "Supervisor";
 
   // map de tipos
@@ -402,8 +404,8 @@ export default function Vehicles() {
 
   // sin permisos
   if (!canViewVehicles) {
-    return (
-      <div className="mx-auto max-w-6xl px-8 py-12">
+  return (
+    <div className="mx-auto max-w-7xl px-8 py-12">
         <div className="text-center py-12">
           <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/30 mx-auto w-fit mb-4">
             <Fuel className="text-red-400 w-8 h-8" />
@@ -419,7 +421,7 @@ export default function Vehicles() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-8 py-12">
+    <div className="mx-auto max-w-7xl px-8 py-12">
       {/* Encabezado */}
       <div className="flex items-center justify-between gap-3 mb-10">
         <div className="flex items-center gap-3">
@@ -574,6 +576,7 @@ export default function Vehicles() {
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Estado</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Consumo (L/Km)</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Capacidad (L)</th>
+                    {canEditVehicles && <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Acciones</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-700/50">
@@ -600,6 +603,22 @@ export default function Vehicles() {
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-200">{v.consumoCombustibleKm ?? "N/A"}</td>
                         <td className="px-6 py-4 text-sm text-slate-200">{v.capacidadCombustible ?? "N/A"}</td>
+                        {canEditVehicles && (
+                          <td className="px-6 py-4 text-sm">
+                            <button
+                              onClick={() => {
+                                setEditingVehicle(v);
+                                setModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30 transition-colors"
+                              title="Editar vehículo"
+                              aria-label="Editar vehículo"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Editar
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
@@ -643,17 +662,28 @@ export default function Vehicles() {
         Sistema de Control de Combustible • © 2025
       </div>
 
-      {/* Modal de creación */}
-      {canCreateVehicles && (
+      {/* Modal de creación/edición */}
+      {(canCreateVehicles || canEditVehicles) && (
         <Modal
           open={isModalOpen}
-          onClose={() => setModalOpen(false)}
+          onClose={() => {
+            setModalOpen(false);
+            setEditingVehicle(null);
+          }}
           vehicles={vehicles}
           tipos={tipos}
+          editingVehicle={editingVehicle}
           onCreated={async () => {
             await refreshVehicles();
             setModalOpen(false);
+            setEditingVehicle(null);
             setOkMsg("✅ Vehículo creado correctamente.");
+          }}
+          onEdited={async () => {
+            await refreshVehicles();
+            setModalOpen(false);
+            setEditingVehicle(null);
+            setOkMsg("✅ Vehículo editado correctamente.");
           }}
         />
       )}
