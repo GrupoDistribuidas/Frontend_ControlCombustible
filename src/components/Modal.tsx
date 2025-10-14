@@ -11,15 +11,34 @@ import Button from "./Button";
 const MAX_TANQUE = 500;
 const PLACA_RE = /^[A-Z]{3}-\d{4}$/; // AAA-1234
 
+// 🔧 Normaliza el estado del backend a las 3 opciones del combo
+function normalizeEstado(
+  raw: any
+): "Disponible" | "En Mantenimiento" | "No Disponible" {
+  const n = String(raw ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  if (n === "disponible") return "Disponible";
+  if (n === "enmantenimiento" || n === "en mantenimiento")
+    return "En Mantenimiento";
+  if (n === "nodisponible" || n === "no disponible")
+    return "No Disponible";
+
+  // fallback seguro
+  return "No Disponible";
+}
+
 export interface VehicleModalProps {
   open: boolean;
   onClose: () => void;
-  /** Lista actual para validación de unicidad de placas */
   vehicles: any[];
-  /** Tipos de maquinaria ya cargados (mejor pasar desde el padre para evitar doble fetch) */
   tipos: TipoMaquinaria[];
-  /** Callback opcional cuando se crea correctamente (para refrescar tabla del padre) */
   onCreated?: () => Promise<void> | void;
+  editingVehicle?: any;
+  onEdited?: () => Promise<void> | void;
 }
 
 export default function VehicleModal({
@@ -28,9 +47,13 @@ export default function VehicleModal({
   vehicles,
   tipos,
   onCreated,
+  editingVehicle,
+  onEdited,
 }: VehicleModalProps) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
+
+  const isEditing = !!editingVehicle;
 
   const {
     register,
@@ -48,12 +71,44 @@ export default function VehicleModal({
       marca: "",
       modelo: "",
       tipoMaquinariaId: 0,
-      disponible: "",
+      disponible: "Disponible",
       consumoCombustibleKm: 0.1,
       capacidadCombustible: 1,
     },
     mode: "onTouched",
   });
+
+  // 📥 Cargar datos para edición (con normalización)
+  useEffect(() => {
+    if (!open) return; // evita reset si el modal está cerrado
+
+    if (isEditing && editingVehicle) {
+      reset({
+        nombre: editingVehicle.nombre ?? "",
+        placa: editingVehicle.placa ?? "",
+        marca: editingVehicle.marca ?? "",
+        modelo: editingVehicle.modelo ?? "",
+        // Asegura number para el select
+        tipoMaquinariaId: Number(editingVehicle.tipoMaquinariaId) || 0,
+        // Normaliza para que coincida con el combo
+        disponible: normalizeEstado(editingVehicle.disponible),
+        consumoCombustibleKm: editingVehicle.consumoCombustibleKm ?? 0.1,
+        capacidadCombustible: editingVehicle.capacidadCombustible ?? 1,
+      });
+    } else {
+      // modo crear
+      reset({
+        nombre: "",
+        placa: "",
+        marca: "",
+        modelo: "",
+        tipoMaquinariaId: 0,
+        disponible: "Disponible",
+        consumoCombustibleKm: 0.1,
+        capacidadCombustible: 1,
+      });
+    }
+  }, [open, isEditing, editingVehicle, reset]);
 
   // valores dinámicos
   const capacidad = Number(watch("capacidadCombustible") ?? 0);
@@ -98,15 +153,19 @@ export default function VehicleModal({
 
   if (!open) return null;
 
-  // envío
+  // 📨 envío
   const onSubmit = async (values: VehicleCreateInput) => {
     setServerError(null);
     setOkMsg(null);
 
     const placa = String(values.placa).toUpperCase().trim();
     const formatoOk = PLACA_RE.test(placa);
+
+    // Evita duplicar placa (si edito, ignoro mi propio id)
     const existe = vehicles.some(
-      (v) => String(v.placa || "").toUpperCase().trim() === placa
+      (v) =>
+        String(v.placa || "").toUpperCase().trim() === placa &&
+        (!isEditing || v.id !== editingVehicle.id)
     );
 
     if (!formatoOk) {
@@ -126,14 +185,23 @@ export default function VehicleModal({
     }
 
     try {
-      await vehiclesService.createVehicle({ ...values, placa } as any);
-      setOkMsg("Vehículo creado correctamente.");
-      if (onCreated) await onCreated();
+      if (isEditing) {
+        await vehiclesService.updateVehicle(editingVehicle.id, {
+          ...values,
+          placa,
+        } as any);
+        setOkMsg("Vehículo editado correctamente.");
+        await onEdited?.();
+      } else {
+        await vehiclesService.createVehicle({ ...values, placa } as any);
+        setOkMsg("Vehículo creado correctamente.");
+        await onCreated?.();
+      }
       reset();
-      // Opcional: cerrar automáticamente tras crear
-      // onClose();
+      // onClose(); // si quieres cerrar automáticamente
     } catch (e: any) {
-      const errorMsg = e.message ?? "❌ No se pudo crear el vehículo";
+      const errorMsg =
+        e.message ?? `❌ No se pudo ${isEditing ? "editar" : "crear"} el vehículo`;
       if (errorMsg.toLowerCase().includes("placa")) {
         setError("placa", {
           type: "server",
@@ -164,10 +232,12 @@ export default function VehicleModal({
               </div>
               <div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-emerald-400">
-                  Registrar Vehículo
+                  {isEditing ? "Editar Vehículo" : "Registrar Vehículo"}
                 </h2>
                 <p className="text-slate-400 text-sm">
-                  Completa los datos del vehículo para agregarlo al sistema.
+                  {isEditing
+                    ? "Modifica los datos del vehículo."
+                    : "Completa los datos del vehículo para agregarlo al sistema."}
                 </p>
               </div>
             </div>
@@ -212,6 +282,7 @@ export default function VehicleModal({
                       </label>
                       <TextField
                         placeholder="Ej. ABC-1234"
+                        disabled={isEditing}
                         {...register("placa", {
                           setValueAs: (v) =>
                             String(v ?? "")
@@ -222,17 +293,19 @@ export default function VehicleModal({
                               PLACA_RE.test(val || "") ||
                               "La placa debe tener el formato AAA-1234 (tres letras y cuatro números)",
                             unica: (val) =>
+                              // si estoy editando, permitir mi propia placa
                               !vehicles.some(
                                 (v) =>
                                   String(v.placa || "")
                                     .toUpperCase()
                                     .trim() ===
-                                  String(val || "").toUpperCase().trim()
+                                    String(val || "").toUpperCase().trim() &&
+                                  (!isEditing || v.id !== editingVehicle?.id)
                               ) || "La placa ya está registrada.",
                           },
                         })}
                         onChange={() => clearErrors("placa")}
-                        className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500"
+                        className="bg-slate-900/60 border border-slate-700 focus:border-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <p className="mt-1 text-xs text-slate-400">
                         Formato requerido: AAA-1234.
@@ -287,14 +360,15 @@ export default function VehicleModal({
                         className="w-full rounded-lg px-4 py-3 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 focus:ring-0 text-slate-200 appearance-none"
                         {...register("tipoMaquinariaId", {
                           setValueAs: (v) =>
-                            v === "" ? undefined : Number(String(v).replace(",", ".")),
+                            v === "" ? 0 : Number(String(v).replace(",", ".")),
                           validate: (v) =>
                             Number(v) > 0 || "Selecciona un tipo de maquinaria",
                         })}
-                        defaultValue={0}
                       >
                         <option value={0} disabled>
-                          {tipos?.length ? "Seleccione una maquinaria" : "No hay tipos disponibles"}
+                          {tipos?.length
+                            ? "Seleccione una maquinaria"
+                            : "No hay tipos disponibles"}
                         </option>
                         {tipos?.map((t) => (
                           <option key={t.id} value={t.id}>
@@ -317,9 +391,9 @@ export default function VehicleModal({
                       <select
                         className="w-full rounded-lg px-4 py-3 bg-slate-900/60 border border-slate-700 focus:border-emerald-500 text-slate-200 appearance-none"
                         {...register("disponible", {
-                          validate: (v) => (v ? true : "Seleccione una disponibilidad"),
+                          validate: (v) =>
+                            v ? true : "Seleccione una disponibilidad",
                         })}
-                        defaultValue=""
                       >
                         <option value="" disabled>
                           Seleccione una disponibilidad
@@ -416,7 +490,11 @@ export default function VehicleModal({
                       disabled={isSubmitting}
                       className="bg-gradient-to-r from-emerald-500 to-lime-500 hover:brightness-110 text-white font-semibold shadow-lg shadow-emerald-500/20"
                     >
-                      {isSubmitting ? "Guardando..." : "Registrar vehículo"}
+                      {isSubmitting
+                        ? "Guardando..."
+                        : isEditing
+                        ? "Editar vehículo"
+                        : "Registrar vehículo"}
                     </Button>
                   </div>
                 </form>
