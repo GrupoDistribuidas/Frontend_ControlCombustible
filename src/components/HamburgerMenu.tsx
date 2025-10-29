@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Fuel, LogOut, Menu, X, Car, LayoutDashboard } from "lucide-react";
+import { Fuel, LogOut, Menu, X, Car, LayoutDashboard, User } from "lucide-react";
 
 interface HamburgerMenuProps {
   onLogout?: () => void;
@@ -34,6 +34,7 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
   const menuItems = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Panel de control" },
     { path: "/vehicles", label: "Vehículos", icon: Car, description: "Gestión de vehículos" },
+    { path: "/choferes", label: "Choferes", icon: User, description: "Gestión de choferes" },
   ];
 
   return (
