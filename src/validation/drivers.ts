@@ -57,5 +57,13 @@ export const ChoferCreateSchema = z.object({
   tipoMaquinariaId: z.union([z.number().int().min(1), z.string().transform(val => parseInt(val, 10))]),
 });
 
+export const ChoferUpdateSchema = z.object({
+  primerNombre: z.string().min(1, "El primer nombre es obligatorio"),
+  segundoNombre: z.string().optional().or(z.literal("")), // opcional
+  primerApellido: z.string().min(1, "El primer apellido es obligatorio"),
+  segundoApellido: z.string().optional().or(z.literal("")), // opcional
+  tipoMaquinariaId: z.union([z.number().int().min(1), z.string().transform(val => parseInt(val, 10))]),
+});
 
 export type ChoferCreateInput = z.infer<typeof ChoferCreateSchema>;
+export type ChoferUpdateInput = z.infer<typeof ChoferUpdateSchema>;

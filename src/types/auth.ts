@@ -5,5 +5,6 @@ export type User = {
   rolId?: number;
   rolNombre?: string;
   estado?: number;
+  choferId?: number;
   fechaCreacion?: string;
 };
