@@ -1,6 +1,9 @@
 export type User = {
   id?: number;
-  name: string;
+  nombreUsuario: string;
   email?: string;
-  role?: string;
+  rolId?: number;
+  rolNombre?: string;
+  estado?: number;
+  fechaCreacion?: string;
 };

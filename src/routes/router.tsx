@@ -6,6 +6,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import AppLayout from "../layouts/AppLayout";
 import Dashboard from "../pages/Dashboard";
 import Vehicles from "../pages/Vehicles";
+import Choferes from "../pages/Choferes";
 
 
 export const router = createBrowserRouter([
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/dashboard", element: <Dashboard /> },
           { path: "/vehicles", element: <Vehicles /> },
+          { path: "/choferes", element: <Choferes /> },
         ],
       },
     ],
