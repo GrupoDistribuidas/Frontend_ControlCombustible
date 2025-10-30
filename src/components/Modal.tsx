@@ -7,6 +7,7 @@ import { VehicleCreateSchema, type TipoMaquinaria, type VehicleCreateInput } fro
 import { vehiclesService } from "../services/vehicles.service";
 import TextField from "./TextField";
 import Button from "./Button";
+import toast from "react-hot-toast";
 
 const MAX_TANQUE = 500;
 const PLACA_RE = /^[A-Z]{3}-\d{4}$/; // AAA-1234
@@ -80,7 +81,20 @@ export default function VehicleModal({
 
   // 📥 Cargar datos para edición (con normalización)
   useEffect(() => {
-    if (!open) return; // evita reset si el modal está cerrado
+    if (!open) {
+      // Reset to default when closing
+      reset({
+        nombre: "",
+        placa: "",
+        marca: "",
+        modelo: "",
+        tipoMaquinariaId: 0,
+        disponible: "Disponible",
+        consumoCombustibleKm: 0.1,
+        capacidadCombustible: 1,
+      });
+      return;
+    }
 
     if (isEditing && editingVehicle) {
       reset({
@@ -156,7 +170,6 @@ export default function VehicleModal({
   // 📨 envío
   const onSubmit = async (values: VehicleCreateInput) => {
     setServerError(null);
-    setOkMsg(null);
 
     const placa = String(values.placa).toUpperCase().trim();
     const formatoOk = PLACA_RE.test(placa);
@@ -190,11 +203,11 @@ export default function VehicleModal({
           ...values,
           placa,
         } as any);
-        setOkMsg("Vehículo editado correctamente.");
+        toast.success("Vehículo editado correctamente.");
         await onEdited?.();
       } else {
         await vehiclesService.createVehicle({ ...values, placa } as any);
-        setOkMsg("Vehículo creado correctamente.");
+        toast.success("Vehículo creado correctamente.");
         await onCreated?.();
       }
       reset();
@@ -469,11 +482,6 @@ export default function VehicleModal({
                   {serverError && (
                     <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
                       {serverError}
-                    </div>
-                  )}
-                  {okMsg && (
-                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-300">
-                      {okMsg}
                     </div>
                   )}
 

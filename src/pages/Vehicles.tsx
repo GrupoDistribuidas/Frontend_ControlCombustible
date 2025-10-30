@@ -6,6 +6,7 @@ import { Fuel, Truck, ChevronLeft, ChevronRight, Download, Edit } from "lucide-r
 import { useAuth } from "../context/AuthContext";
 import type { TipoMaquinaria } from "../validation/vehicles";
 import Modal from "../components/Modal";
+import toast from "react-hot-toast";
 
 export default function Vehicles() {
   const { user } = useAuth();
@@ -141,7 +142,14 @@ export default function Vehicles() {
       a.click();
       document.body.removeChild(a);
 
-      setOkMsg("✅ CSV exportado correctamente.");
+      toast.success("✅ CSV exportado correctamente.", {
+        duration: 5000,
+        style: {
+          background: '#10b981',
+          color: '#ffffff',
+          border: '1px solid #059669',
+        },
+      });
     } catch {
       setServerError("❌ Error al exportar CSV.");
     } finally {
@@ -351,7 +359,14 @@ export default function Vehicles() {
     });
 
     doc.save(`vehiculos_${new Date().toISOString().split("T")[0]}.pdf`);
-    setOkMsg("✅ PDF exportado correctamente.");
+    toast.success("✅ PDF exportado correctamente.", {
+      duration: 5000,
+      style: {
+        background: '#10b981',
+        color: '#ffffff',
+        border: '1px solid #059669',
+      },
+    });
   } catch {
     setServerError("❌ Error al exportar PDF.");
   } finally {
@@ -677,13 +692,11 @@ export default function Vehicles() {
             await refreshVehicles();
             setModalOpen(false);
             setEditingVehicle(null);
-            setOkMsg("✅ Vehículo creado correctamente.");
           }}
           onEdited={async () => {
             await refreshVehicles();
             setModalOpen(false);
             setEditingVehicle(null);
-            setOkMsg("✅ Vehículo editado correctamente.");
           }}
         />
       )}
