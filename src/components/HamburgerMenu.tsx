@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Fuel, LogOut, Menu, X, Car, LayoutDashboard, User } from "lucide-react";
+import {
+  Fuel,
+  LogOut,
+  Menu,
+  X,
+  Car,
+  LayoutDashboard,
+  User,
+  Route,
+} from "lucide-react";
 
 interface HamburgerMenuProps {
   onLogout?: () => void;
@@ -32,9 +41,30 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
   }, []);
 
   const menuItems = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Panel de control" },
-    { path: "/vehicles", label: "Vehículos", icon: Car, description: "Gestión de vehículos" },
-    { path: "/choferes", label: "Choferes", icon: User, description: "Gestión de choferes" },
+    {
+      path: "/dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      description: "Panel de control",
+    },
+    {
+      path: "/vehicles",
+      label: "Vehículos",
+      icon: Car,
+      description: "Gestión de vehículos",
+    },
+    {
+      path: "/choferes",
+      label: "Choferes",
+      icon: User,
+      description: "Gestión de choferes",
+    },
+    {
+      path: "/rutas",
+      label: "Rutas",
+      icon: Route,
+      description: "Gestión de rutas",
+    },
   ];
 
   return (
@@ -51,9 +81,21 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
               aria-label="Abrir menú"
             >
               <div className="relative w-6 h-6">
-                <span className={`absolute left-0 block w-6 h-0.5 bg-slate-100 rounded-full transition-all duration-300 ${isOpen ? "top-3 rotate-45" : "top-1"}`} />
-                <span className={`absolute left-0 top-3 block w-6 h-0.5 bg-slate-100 rounded-full transition-all duration-300 ${isOpen ? "opacity-0 scale-0" : "opacity-100 scale-100"}`} />
-                <span className={`absolute left-0 block w-6 h-0.5 bg-slate-100 rounded-full transition-all duration-300 ${isOpen ? "top-3 -rotate-45" : "top-5"}`} />
+                <span
+                  className={`absolute left-0 block w-6 h-0.5 bg-slate-100 rounded-full transition-all duration-300 ${
+                    isOpen ? "top-3 rotate-45" : "top-1"
+                  }`}
+                />
+                <span
+                  className={`absolute left-0 top-3 block w-6 h-0.5 bg-slate-100 rounded-full transition-all duration-300 ${
+                    isOpen ? "opacity-0 scale-0" : "opacity-100 scale-100"
+                  }`}
+                />
+                <span
+                  className={`absolute left-0 block w-6 h-0.5 bg-slate-100 rounded-full transition-all duration-300 ${
+                    isOpen ? "top-3 -rotate-45" : "top-5"
+                  }`}
+                />
               </div>
             </button>
 
@@ -64,15 +106,21 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
 
             {/* Texto del sistema */}
             <div>
-              <h1 className="text-lg font-bold text-emerald-400 tracking-tight">Sistema de Control de Combustible</h1>
-              <p className="text-xs text-slate-400">Gestión vehicular y consumo energético</p>
+              <h1 className="text-lg font-bold text-emerald-400 tracking-tight">
+                Sistema de Control de Combustible
+              </h1>
+              <p className="text-xs text-slate-400">
+                Gestión vehicular y consumo energético
+              </p>
             </div>
           </div>
 
           {/* Derecha: usuario + logout */}
           <div className="flex items-center gap-5">
             <div className="hidden sm:flex flex-col text-right">
-              <span className="text-sm font-medium text-slate-100">{user.username}</span>
+              <span className="text-sm font-medium text-slate-100">
+                {user.username}
+              </span>
               <span className="text-xs text-slate-400">{user.email}</span>
             </div>
 
@@ -121,7 +169,9 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
                   <li
                     key={item.path}
                     style={{ animationDelay: `${index * 60}ms` }}
-                    className={`${isOpen ? "animate-[slideIn_0.3s_ease-out_forwards]" : ""}`}
+                    className={`${
+                      isOpen ? "animate-[slideIn_0.3s_ease-out_forwards]" : ""
+                    }`}
                   >
                     <Link
                       to={item.path}
@@ -147,7 +197,9 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
                       </div>
 
                       <div className="flex-1 text-left">
-                        <div className="font-semibold text-sm">{item.label}</div>
+                        <div className="font-semibold text-sm">
+                          {item.label}
+                        </div>
                         <div className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
                           {item.description}
                         </div>
@@ -167,8 +219,12 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
                   {user.username.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-100 truncate">{user.username}</p>
-                  <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                  <p className="text-sm font-semibold text-slate-100 truncate">
+                    {user.username}
+                  </p>
+                  <p className="text-xs text-slate-400 truncate">
+                    {user.email}
+                  </p>
                 </div>
               </div>
             </div>

@@ -7,7 +7,7 @@ import AppLayout from "../layouts/AppLayout";
 import Dashboard from "../pages/Dashboard";
 import Vehicles from "../pages/Vehicles";
 import Choferes from "../pages/Choferes";
-
+import Rutas from "../pages/Rutas";
 
 export const router = createBrowserRouter([
   // 👉 redirige raíz a /login
@@ -27,10 +27,14 @@ export const router = createBrowserRouter([
           { path: "/dashboard", element: <Dashboard /> },
           { path: "/vehicles", element: <Vehicles /> },
           { path: "/choferes", element: <Choferes /> },
+          { path: "/rutas", element: <Rutas /> },
         ],
       },
     ],
   },
 
-  { path: "*", element: <div style={{ padding: 24 }}>404: Página no encontrada</div> },
+  {
+    path: "*",
+    element: <div style={{ padding: 24 }}>404: Página no encontrada</div>,
+  },
 ]);
