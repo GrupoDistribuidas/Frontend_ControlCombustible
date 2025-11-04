@@ -22,16 +22,27 @@ import { asignacionesService } from "../services/asignaciones.service";
 import { rutasService } from "../services/rutas.service";
 import { choferesService } from "../services/choferes.service";
 import { vehiclesService } from "../services/vehicles.service";
-import type { Asignacion, Ruta, Chofer, Vehicle } from "../types/asignaciones";
+import type { Asignacion, Ruta, Chofer, Vehicle, EstadoAsignacion } from "../types/asignaciones";
 
 const getNombreCompleto = (chofer: Chofer) =>
   `${chofer.primerNombre} ${chofer.segundoNombre || ""} ${chofer.primerApellido} ${chofer.segundoApellido || ""}`.trim();
+
+const estadoMap: Record<number, string> = {
+  1: "Asignada",
+  2: "En Proceso",
+  3: "Completada",
+  4: "Cancelada",
+  5: "Pausada"
+};
+
+
 
 export default function Asignaciones() {
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
   const [rutas, setRutas] = useState<Ruta[]>([]);
   const [choferes, setChoferes] = useState<Chofer[]>([]);
   const [vehiculos, setVehiculos] = useState<Vehicle[]>([]);
+  // const [estadosAsignacion, setEstadosAsignacion] = useState<EstadoAsignacion[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -51,6 +62,7 @@ export default function Asignaciones() {
   const choferesMap = useMemo(() => new Map(choferes.map((c) => [c.id, c])), [choferes]);
   const vehiculosMap = useMemo(() => new Map(vehiculos.map((v) => [v.id, v])), [vehiculos]);
 
+
   // Cargar datos
   useEffect(() => {
     loadData();
@@ -65,7 +77,13 @@ export default function Asignaciones() {
         choferesService.getChoferes(),
         vehiclesService.getVehicles(),
       ]);
-      setAsignaciones(Array.isArray(asigs) ? asigs : []);
+      const asignacionesCompletas = (Array.isArray(asigs) ? asigs : []).map((a: any) => ({
+        ...a,
+        ruta: rutasData.find((r: Ruta) => r.id === a.rutaId),
+        chofer: choferesData.find((c: Chofer) => c.id === a.choferId),
+        vehiculo: vehiculosData.find((v: Vehicle) => v.id === a.vehiculoId),
+      }));
+      setAsignaciones(asignacionesCompletas);
       setRutas(Array.isArray(rutasData) ? rutasData : []);
       setChoferes(Array.isArray(choferesData) ? choferesData : []);
       setVehiculos(Array.isArray(vehiculosData) ? vehiculosData : []);
@@ -80,11 +98,9 @@ export default function Asignaciones() {
   const filtered = useMemo(() => {
     const term = searchTerm.toLowerCase().trim();
     return asignaciones.filter((a) => {
-      const ruta = rutasMap.get(a.rutaId)?.nombre?.toLowerCase() || "";
-      const chofer = choferesMap.get(a.choferId)
-        ? getNombreCompleto(choferesMap.get(a.choferId)!).toLowerCase()
-        : "";
-      const vehiculo = vehiculosMap.get(a.vehiculoId)?.nombre?.toLowerCase() || "";
+      const ruta = a.ruta?.nombre?.toLowerCase() || "";
+      const chofer = a.chofer ? getNombreCompleto(a.chofer).toLowerCase() : "";
+      const vehiculo = a.vehiculo?.nombre?.toLowerCase() || "";
 
       const matchesTerm = !term || ruta.includes(term) || chofer.includes(term) || vehiculo.includes(term);
       const matchesEstado =
@@ -102,9 +118,6 @@ export default function Asignaciones() {
     });
   }, [
     asignaciones,
-    rutasMap,
-    choferesMap,
-    vehiculosMap,
     searchTerm,
     selectedEstado,
     selectedFecha,
@@ -141,6 +154,15 @@ export default function Asignaciones() {
       await loadData();
     } catch (e) {
       console.error("Error al actualizar estado:", e);
+    }
+  };
+
+  const handleChangeEstado = async (id: number, nuevoEstado: string) => {
+    try {
+      await asignacionesService.updateEstadoAsignacion(id, nuevoEstado);
+      await loadData();
+    } catch (e) {
+      console.error("Error al cambiar estado de asignación:", e);
     }
   };
 
@@ -268,15 +290,13 @@ export default function Asignaciones() {
                   {paginated.map((a) => (
                     <tr key={a.id} className="border-b border-slate-700/50 hover:bg-slate-800/30">
                       <td className="px-6 py-4 text-slate-200">
-                        {rutasMap.get(a.rutaId)?.nombre || "N/A"}
+                        {a.ruta?.nombre || "N/A"}
                       </td>
                       <td className="px-6 py-4 text-slate-300">
-                        {choferesMap.get(a.choferId)
-                          ? getNombreCompleto(choferesMap.get(a.choferId)!)
-                          : "N/A"}
+                        {a.chofer ? getNombreCompleto(a.chofer) : "N/A"}
                       </td>
                       <td className="px-6 py-4 text-slate-300">
-                        {vehiculosMap.get(a.vehiculoId)?.nombre || "N/A"}
+                        {a.vehiculo?.nombre || "N/A"}
                       </td>
                       <td className="px-6 py-4 text-slate-300">
                         {a.fechaAsignacion
@@ -284,24 +304,22 @@ export default function Asignaciones() {
                           : "N/A"}
                       </td>
                       <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleToggleEstado(a.id, a.estado)}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                            a.estado
-                              ? "bg-green-500/15 text-green-400 hover:bg-green-500/25"
-                              : "bg-red-500/15 text-red-400 hover:bg-red-500/25"
+                        <select
+                          value={estadoMap[(a as any).estadoId] || "Asignada"}
+                          onChange={(e) => handleChangeEstado(a.id, e.target.value)}
+                          disabled={(a as any).estadoId === 3 || (a as any).estadoId === 4}
+                          className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-all ${
+                            (a as any).estadoId === 3 || (a as any).estadoId === 4
+                              ? "bg-slate-700 border-slate-500 text-slate-400 cursor-not-allowed"
+                              : "bg-slate-800 border-slate-600 text-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
                           }`}
                         >
-                          {a.estado ? (
-                            <>
-                              <CheckCircle className="w-3.5 h-3.5" /> Activo
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="w-3.5 h-3.5" /> Inactivo
-                            </>
-                          )}
-                        </button>
+                          <option value="Asignada">Asignada</option>
+                          <option value="En Proceso">En Proceso</option>
+                          <option value="Completada">Completada</option>
+                          <option value="Cancelada">Cancelada</option>
+                          <option value="Pausada">Pausada</option>
+                        </select>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex gap-2">
