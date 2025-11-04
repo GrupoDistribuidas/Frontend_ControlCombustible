@@ -1,1 +1,0 @@
-- [ ] Edit src/pages/Choferes.tsx to correct the estado button: active (true) should show green play icon (▶️), inactive (false) should show red pause icon (⏸️)
