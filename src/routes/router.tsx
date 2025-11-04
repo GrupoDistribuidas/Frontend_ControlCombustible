@@ -9,6 +9,7 @@ import Vehicles from "../pages/Vehicles";
 import Choferes from "../pages/Choferes";
 import Rutas from "../pages/Rutas";
 import Puntos from "../pages/Puntos";
+import Asignaciones from "../pages/Asignaciones";
 
 export const router = createBrowserRouter([
   // 👉 redirige raíz a /login
@@ -30,6 +31,7 @@ export const router = createBrowserRouter([
           { path: "/choferes", element: <Choferes /> },
           { path: "/rutas", element: <Rutas /> },
           { path: "/puntos", element: <Puntos /> },
+          { path: "/asignaciones", element: <Asignaciones /> },
         ],
       },
     ],
