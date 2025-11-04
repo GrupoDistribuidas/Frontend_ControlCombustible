@@ -13,7 +13,7 @@ import {
 import { asignacionesService } from "../services/asignaciones.service";
 import TextField from "./TextField";
 import Button from "./Button";
-import type { Asignacion, Ruta, Chofer, Vehicle } from "../types/asignaciones";
+import type { Asignacion, Ruta, Chofer, Vehicle, EstadoAsignacion } from "../types/asignaciones";
 
 export interface AsignacionModalProps {
   isOpen: boolean;
@@ -64,9 +64,9 @@ export default function AsignacionModal({
 
     if (isEditing && editingAsignacion) {
       reset({
-        rutaId: editingAsignacion.rutaId,
-        choferId: editingAsignacion.choferId,
-        vehiculoId: editingAsignacion.vehiculoId,
+        rutaId: editingAsignacion.ruta?.id || editingAsignacion.rutaId,
+        choferId: editingAsignacion.chofer?.id || editingAsignacion.choferId,
+        vehiculoId: editingAsignacion.vehiculo?.id || editingAsignacion.vehiculoId,
         fechaAsignacion: editingAsignacion.fechaAsignacion?.split('T')[0] || "",
       });
     } else {
@@ -221,12 +221,12 @@ export default function AsignacionModal({
                   {choferes
                     .filter((chofer) =>
                       chofer.disponible ||
-                      (isEditing && editingAsignacion && chofer.id === editingAsignacion.choferId)
+                      (isEditing && editingAsignacion && chofer.id === (editingAsignacion.chofer?.id || editingAsignacion.choferId))
                     )
                     .map((chofer) => (
                       <option key={chofer.id} value={chofer.id}>
                         {`${chofer.primerNombre} ${chofer.segundoNombre || ""} ${chofer.primerApellido} ${chofer.segundoApellido || ""}`.trim()} - {chofer.identificacion}
-                        {!chofer.disponible && isEditing && editingAsignacion && chofer.id === editingAsignacion.choferId && " (Actual)"}
+                        {!chofer.disponible && isEditing && editingAsignacion && chofer.id === (editingAsignacion.chofer?.id || editingAsignacion.choferId) && " (Actual)"}
                       </option>
                     ))}
                 </select>
@@ -255,17 +255,17 @@ export default function AsignacionModal({
                   {vehiculos
                     .filter((vehiculo) =>
                       vehiculo.disponible === "Disponible" ||
-                      (isEditing && editingAsignacion && vehiculo.id === editingAsignacion.vehiculoId)
+                      (isEditing && editingAsignacion && vehiculo.id === (editingAsignacion.vehiculo?.id || editingAsignacion.vehiculoId))
                     )
                     .map((vehiculo) => (
                       <option key={vehiculo.id} value={vehiculo.id}>
                         {vehiculo.nombre} - {vehiculo.placa} ({vehiculo.marca})
-                        {vehiculo.disponible !== "Disponible" && isEditing && editingAsignacion && vehiculo.id === editingAsignacion.vehiculoId && " (Actual)"}
+                        {vehiculo.disponible !== "Disponible" && isEditing && editingAsignacion && vehiculo.id === (editingAsignacion.vehiculo?.id || editingAsignacion.vehiculoId) && " (Actual)"}
                       </option>
                     ))}
                   {vehiculos.filter((vehiculo) =>
                     vehiculo.disponible === "Disponible" ||
-                    (isEditing && editingAsignacion && vehiculo.id === editingAsignacion.vehiculoId)
+                    (isEditing && editingAsignacion && vehiculo.id === (editingAsignacion.vehiculo?.id || editingAsignacion.vehiculoId))
                   ).length === 0 && (
                     <option disabled>No hay vehículos disponibles</option>
                   )}
