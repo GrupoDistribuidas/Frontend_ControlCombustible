@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   User,
   Route,
+  MapPin,
 } from "lucide-react";
 
 interface HamburgerMenuProps {
@@ -64,6 +65,12 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
       label: "Rutas",
       icon: Route,
       description: "Gestión de rutas",
+    },
+    {
+      path: "/puntos",
+      label: "Puntos",
+      icon: MapPin,
+      description: "Gestión de puntos",
     },
   ];
 
