@@ -4,7 +4,7 @@ import HamburgerMenu from "../components/HamburgerMenu";
 import { Toaster } from "react-hot-toast";
 
 export default function AppLayout() {
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
 
   return (
     <div className="min-h-dvh bg-[#0e1420] text-slate-100">

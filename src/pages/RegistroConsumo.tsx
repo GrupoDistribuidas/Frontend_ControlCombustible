@@ -9,13 +9,10 @@ import {
   Calculator,
   TrendingUp,
   TrendingDown,
-  AlertTriangle,
   CheckCircle,
-  Clock,
 } from "lucide-react";
 
 import TextField from "../components/TextField";
-import Button from "../components/Button";
 import RegistroConsumoModal from "../components/RegistroConsumoModal";
 
 import { registroConsumoService } from "../services/registro-consumo.service";

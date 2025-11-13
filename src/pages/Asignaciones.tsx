@@ -3,26 +3,20 @@ import {
   Route,
   Edit,
   Plus,
-  CheckCircle,
-  XCircle,
   Search,
   X,
   ChevronLeft,
   ChevronRight,
-  Truck,
-  User,
-  Calendar,
 } from "lucide-react";
 
 import TextField from "../components/TextField";
-import Button from "../components/Button";
 import AsignacionModal from "../components/AsignacionModal";
 
 import { asignacionesService } from "../services/asignaciones.service";
 import { rutasService } from "../services/rutas.service";
 import { choferesService } from "../services/choferes.service";
 import { vehiclesService } from "../services/vehicles.service";
-import type { Asignacion, Ruta, Chofer, Vehicle, EstadoAsignacion } from "../types/asignaciones";
+import type { Asignacion, Ruta, Chofer, Vehicle } from "../types/asignaciones";
 
 const getNombreCompleto = (chofer: Chofer) =>
   `${chofer.primerNombre} ${chofer.segundoNombre || ""} ${chofer.primerApellido} ${chofer.segundoApellido || ""}`.trim();
@@ -56,12 +50,6 @@ export default function Asignaciones() {
   const [selectedVehiculo, setSelectedVehiculo] = useState<number | "">("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // Mapas
-  const rutasMap = useMemo(() => new Map(rutas.map((r) => [r.id, r])), [rutas]);
-  const choferesMap = useMemo(() => new Map(choferes.map((c) => [c.id, c])), [choferes]);
-  const vehiculosMap = useMemo(() => new Map(vehiculos.map((v) => [v.id, v])), [vehiculos]);
-
 
   // Cargar datos
   useEffect(() => {
@@ -146,15 +134,6 @@ export default function Asignaciones() {
   const handleCreate = () => {
     setEditingAsignacion(null);
     setIsModalOpen(true);
-  };
-
-  const handleToggleEstado = async (id: number, estadoActual: boolean) => {
-    try {
-      await asignacionesService.updateAsignacionEstado(id, !estadoActual);
-      await loadData();
-    } catch (e) {
-      console.error("Error al actualizar estado:", e);
-    }
   };
 
   const handleChangeEstado = async (id: number, nuevoEstado: string) => {

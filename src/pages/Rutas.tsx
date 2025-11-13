@@ -4,8 +4,6 @@ import {
   Edit,
   Plus,
   Power,
-  CheckCircle,
-  XCircle,
   Search,
   X,
   ChevronLeft,
@@ -24,7 +22,6 @@ export default function Rutas() {
   const [rutas, setRutas] = useState<Ruta[]>([]);
   const [puntos, setPuntos] = useState<Punto[]>([]);
   const [loadingRutas, setLoadingRutas] = useState(true);
-  const [loadingPuntos, setLoadingPuntos] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRuta, setEditingRuta] = useState<Ruta | null>(null);
 
@@ -86,13 +83,10 @@ export default function Rutas() {
   useEffect(() => {
     (async () => {
       try {
-        setLoadingPuntos(true);
         const data = await puntosService.getPuntos();
         setPuntos(Array.isArray(data) ? data : []);
       } catch (e: any) {
         console.error("No se pudieron cargar los puntos");
-      } finally {
-        setLoadingPuntos(false);
       }
     })();
   }, []);

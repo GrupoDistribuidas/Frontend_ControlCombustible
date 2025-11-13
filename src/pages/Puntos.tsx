@@ -4,8 +4,6 @@ import {
   Edit,
   Plus,
   Power,
-  CheckCircle,
-  XCircle,
   Search,
   X,
   ChevronLeft,
@@ -129,12 +127,6 @@ export default function Puntos() {
   const handleEdit = (punto: Punto) => {
     setEditingPunto(punto);
     openModal();
-  };
-
-  // Placeholder para toggle estado, ajustar si Punto tiene estado
-  const handleToggleEstado = async (punto: Punto) => {
-    // Implementar si es necesario
-    console.log("Toggle estado para punto:", punto);
   };
 
   return (
