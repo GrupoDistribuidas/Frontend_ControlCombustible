@@ -54,7 +54,6 @@ export default function RegistroConsumoModal({
     register,
     handleSubmit,
     reset,
-    setError,
     watch,
     setValue,
     formState: { errors, isSubmitting },

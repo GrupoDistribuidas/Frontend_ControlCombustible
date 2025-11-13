@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
-import { User, X, CheckCircle } from "lucide-react";
+import { User, X } from "lucide-react";
 import {
   ChoferCreateSchema,
   ChoferUpdateSchema,
@@ -46,7 +46,7 @@ export default function ChoferModal({
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm({
+  } = useForm<any>({
     resolver: zodResolver(isEditing ? ChoferUpdateSchema : ChoferCreateSchema),
     defaultValues: {
       primerNombre: "",
@@ -260,7 +260,7 @@ export default function ChoferModal({
                     />
                     {errors.primerNombre && (
                       <p className="mt-1 text-sm text-red-400">
-                        {errors.primerNombre.message}
+                        {String(errors.primerNombre.message)}
                       </p>
                     )}
                   </div>
@@ -290,7 +290,7 @@ export default function ChoferModal({
                     />
                     {errors.primerApellido && (
                       <p className="mt-1 text-sm text-red-400">
-                        {errors.primerApellido.message}
+                        {String(errors.primerApellido.message)}
                       </p>
                     )}
                   </div>
@@ -324,7 +324,7 @@ export default function ChoferModal({
                     />
                     {errors.identificacion && (
                       <p className="mt-1 text-sm text-red-400">
-                        {errors.identificacion?.message}
+                        {String(errors.identificacion?.message)}
                       </p>
                     )}
                     {isEditing && (
@@ -349,7 +349,7 @@ export default function ChoferModal({
                     />
                     {errors.fechaNacimiento && (
                       <p className="mt-1 text-sm text-red-400">
-                        {errors.fechaNacimiento?.message}
+                        {String(errors.fechaNacimiento?.message)}
                       </p>
                     )}
                     {isEditing && (
@@ -382,7 +382,7 @@ export default function ChoferModal({
                     </select>
                     {errors.tipoMaquinariaId && (
                       <p className="mt-1 text-sm text-red-400">
-                        {errors.tipoMaquinariaId.message}
+                        {String(errors.tipoMaquinariaId.message)}
                       </p>
                     )}
                   </div>
@@ -415,7 +415,7 @@ export default function ChoferModal({
                       </select>
                       {errors.usuarioId && (
                         <p className="mt-1 text-sm text-red-400">
-                          {errors.usuarioId?.message}
+                          {String(errors.usuarioId?.message)}
                         </p>
                       )}
                     </div>

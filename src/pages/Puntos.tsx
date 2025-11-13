@@ -3,7 +3,6 @@ import {
   MapPin,
   Edit,
   Plus,
-  Power,
   Search,
   X,
   ChevronLeft,

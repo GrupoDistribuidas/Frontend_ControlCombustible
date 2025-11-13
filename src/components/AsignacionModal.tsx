@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
-import { UserCheck, X, CheckCircle, Calendar, Truck, User, Route } from "lucide-react";
+import { UserCheck, X, Calendar, Truck, User, Route } from "lucide-react";
 import {
   AsignacionCreateSchema,
   AsignacionUpdateSchema,
@@ -13,7 +13,7 @@ import {
 import { asignacionesService } from "../services/asignaciones.service";
 import TextField from "./TextField";
 import Button from "./Button";
-import type { Asignacion, Ruta, Chofer, Vehicle, EstadoAsignacion } from "../types/asignaciones";
+import type { Asignacion, Ruta, Chofer, Vehicle } from "../types/asignaciones";
 
 export interface AsignacionModalProps {
   isOpen: boolean;
@@ -43,9 +43,6 @@ export default function AsignacionModal({
     register,
     handleSubmit,
     reset,
-    setError,
-    watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<AsignacionCreateInput | AsignacionUpdateInput>({
     resolver: zodResolver(isEditing ? AsignacionUpdateSchema : AsignacionCreateSchema),
