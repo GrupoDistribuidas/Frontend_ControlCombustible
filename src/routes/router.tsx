@@ -10,6 +10,7 @@ import Choferes from "../pages/Choferes";
 import Rutas from "../pages/Rutas";
 import Puntos from "../pages/Puntos";
 import Asignaciones from "../pages/Asignaciones";
+import RegistroConsumo from "../pages/RegistroConsumo";
 
 export const router = createBrowserRouter([
   // 👉 redirige raíz a /login
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
           { path: "/rutas", element: <Rutas /> },
           { path: "/puntos", element: <Puntos /> },
           { path: "/asignaciones", element: <Asignaciones /> },
+          { path: "/registro-consumo", element: <RegistroConsumo /> },
         ],
       },
     ],

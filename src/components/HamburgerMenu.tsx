@@ -79,6 +79,12 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
       icon: UserCheck,
       description: "Gestión de asignaciones",
     },
+    {
+      path: "/registro-consumo",
+      label: "Registro Consumo",
+      icon: Fuel,
+      description: "Registro de consumo de combustible",
+    },
   ];
 
   return (
