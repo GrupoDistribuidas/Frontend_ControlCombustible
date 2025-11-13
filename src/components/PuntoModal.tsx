@@ -37,7 +37,6 @@ export default function PuntoModal({
     register,
     handleSubmit,
     reset,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<PuntoCreateInput | PuntoUpdateInput>({
     resolver: zodResolver(isEditing ? PuntoUpdateSchema : PuntoCreateSchema),

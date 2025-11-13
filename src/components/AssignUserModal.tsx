@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { User, X } from "lucide-react";
 import { usersService } from "../services/users.service";
 import { choferesService } from "../services/choferes.service";
