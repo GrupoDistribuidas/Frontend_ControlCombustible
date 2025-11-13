@@ -46,7 +46,7 @@ export default function ChoferModal({
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<ChoferCreateInput | ChoferUpdateInput>({
+  } = useForm({
     resolver: zodResolver(isEditing ? ChoferUpdateSchema : ChoferCreateSchema),
     defaultValues: {
       primerNombre: "",
@@ -324,7 +324,7 @@ export default function ChoferModal({
                     />
                     {errors.identificacion && (
                       <p className="mt-1 text-sm text-red-400">
-                        {errors.identificacion.message}
+                        {errors.identificacion?.message}
                       </p>
                     )}
                     {isEditing && (
@@ -349,7 +349,7 @@ export default function ChoferModal({
                     />
                     {errors.fechaNacimiento && (
                       <p className="mt-1 text-sm text-red-400">
-                        {errors.fechaNacimiento.message}
+                        {errors.fechaNacimiento?.message}
                       </p>
                     )}
                     {isEditing && (
@@ -415,7 +415,7 @@ export default function ChoferModal({
                       </select>
                       {errors.usuarioId && (
                         <p className="mt-1 text-sm text-red-400">
-                          {errors.usuarioId.message}
+                          {errors.usuarioId?.message}
                         </p>
                       )}
                     </div>

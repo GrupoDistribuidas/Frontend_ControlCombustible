@@ -1,4 +1,4 @@
-import { ForgotPasswordRequestSchema, LoginRequestSchema, LoginResponseSchema, type ForgotPasswordRequest, type LoginRequest, type LoginResponse } from "../validation/auth";
+import { LoginRequestSchema, LoginResponseSchema, type ForgotPasswordRequest, type LoginRequest, type LoginResponse } from "../validation/auth";
 import { http } from "./http";
 export const authService = {
   async login(payload: LoginRequest): Promise<LoginResponse> {

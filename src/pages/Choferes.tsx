@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { User, Edit, Plus, Power, CheckCircle, XCircle, UserPlus, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { User, Edit, Plus, Power, UserPlus, Search, X, ChevronLeft, ChevronRight, XCircle, CheckCircle } from "lucide-react";
 
 import ChoferModal from "../components/ChoferModal";
 import AssignUserModal from "../components/AssignUserModal";
@@ -162,15 +162,6 @@ export default function Choferes() {
   const handleEdit = (chofer: Chofer) => {
     setEditingChofer(chofer);
     openModal();
-  };
-
-  const handleToggleEstado = async (chofer: Chofer) => {
-    try {
-      await choferesService.updateChoferEstado(chofer.id, !chofer.estado);
-      loadChoferes();
-    } catch (e: any) {
-      console.error("Error al cambiar estado del chofer:", e);
-    }
   };
 
   const handleToggleDisponibilidad = async (chofer: Chofer) => {

@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
-import { Route, X, CheckCircle } from "lucide-react";
+import { MapPin, X, Route } from "lucide-react";
 import {
   RutaCreateSchema,
   RutaUpdateSchema,

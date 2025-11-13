@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { vehiclesService } from "../services/vehicles.service";
 import TextField from "../components/TextField";
-import Button from "../components/Button";
 import { Fuel, Truck, ChevronLeft, ChevronRight, Download, Edit } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import type { TipoMaquinaria } from "../validation/vehicles";
@@ -321,7 +320,7 @@ export default function Vehicles() {
           const raw = d.cell.raw;
           const { bg, text } = statusStyle(raw);
           const { x, y, width, height } = d.cell;
-          const padXc = 8, padYc = 3;
+          const padXc = 8;
 
           // tamaño chip
           const textW = doc.getTextWidth(String(raw));
