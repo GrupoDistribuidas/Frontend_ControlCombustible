@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
-import { MapPin, X, CheckCircle } from "lucide-react";
+import { MapPin, X } from "lucide-react";
 import {
   PuntoCreateSchema,
   PuntoUpdateSchema,
@@ -37,7 +37,6 @@ export default function PuntoModal({
     register,
     handleSubmit,
     reset,
-    setError,
     formState: { errors, isSubmitting },
   } = useForm<PuntoCreateInput | PuntoUpdateInput>({
     resolver: zodResolver(isEditing ? PuntoUpdateSchema : PuntoCreateSchema),

@@ -3,8 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Fuel,
   LogOut,
-  Menu,
-  X,
   Car,
   LayoutDashboard,
   User,

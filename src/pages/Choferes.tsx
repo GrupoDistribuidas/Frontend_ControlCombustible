@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { User, Edit, Plus, Power, CheckCircle, XCircle, UserPlus, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { User, Edit, Plus, Power, UserPlus, Search, X, ChevronLeft, ChevronRight, XCircle, CheckCircle } from "lucide-react";
 
 import ChoferModal from "../components/ChoferModal";
 import AssignUserModal from "../components/AssignUserModal";
@@ -15,7 +15,6 @@ export default function Choferes() {
   const [choferes, setChoferes] = useState<Chofer[]>([]);
   const [tipos, setTipos] = useState<TipoMaquinaria[]>([]);
   const [loadingChoferes, setLoadingChoferes] = useState(true);
-  const [loadingTipos, setLoadingTipos] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingChofer, setEditingChofer] = useState<Chofer | null>(null);
   const [isAssignUserModalOpen, setIsAssignUserModalOpen] = useState(false);
@@ -80,13 +79,10 @@ export default function Choferes() {
   useEffect(() => {
     (async () => {
       try {
-        setLoadingTipos(true);
         const data = await vehiclesService.getTipos();
         setTipos(Array.isArray(data) ? data : []);
       } catch (e: any) {
         console.error("No se pudieron cargar los tipos de maquinaria");
-      } finally {
-        setLoadingTipos(false);
       }
     })();
   }, []);
@@ -164,21 +160,21 @@ export default function Choferes() {
     openModal();
   };
 
-  const handleToggleEstado = async (chofer: Chofer) => {
-    try {
-      await choferesService.updateChoferEstado(chofer.id, !chofer.estado);
-      loadChoferes();
-    } catch (e: any) {
-      console.error("Error al cambiar estado del chofer:", e);
-    }
-  };
-
   const handleToggleDisponibilidad = async (chofer: Chofer) => {
     try {
       await choferesService.updateChoferDisponibilidad(chofer.id, !chofer.disponible);
       loadChoferes();
     } catch (e: any) {
       console.error("Error al cambiar disponibilidad del chofer:", e);
+    }
+  };
+
+  const handleToggleEstado = async (chofer: Chofer) => {
+    try {
+      await choferesService.updateChoferEstado(chofer.id, !chofer.estado);
+      loadChoferes();
+    } catch (e: any) {
+      console.error("Error al cambiar estado del chofer:", e);
     }
   };
 

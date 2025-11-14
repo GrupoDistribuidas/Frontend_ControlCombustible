@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 
 import {
@@ -55,7 +54,6 @@ export default function RegistroConsumoModal({
     register,
     handleSubmit,
     reset,
-    setError,
     watch,
     setValue,
     formState: { errors, isSubmitting },

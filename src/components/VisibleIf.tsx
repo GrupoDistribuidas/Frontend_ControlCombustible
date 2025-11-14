@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { useAuth } from "../context/AuthContext";
 
 interface VisibleIfProps {
   condition: boolean;
