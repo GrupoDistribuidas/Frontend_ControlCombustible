@@ -11,6 +11,7 @@ import {
   Route,
   MapPin,
   UserCheck,
+  Users,
 } from "lucide-react";
 
 interface HamburgerMenuProps {
@@ -84,6 +85,12 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({ onLogout }) => {
       label: "Registro Consumo",
       icon: Fuel,
       description: "Registro de consumo de combustible",
+    },
+    {
+      path: "/usuarios",
+      label: "Usuarios",
+      icon: Users,
+      description: "Gestión de usuarios",
     },
   ];
 

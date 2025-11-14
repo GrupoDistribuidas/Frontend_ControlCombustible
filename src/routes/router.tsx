@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
-import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
 import ProtectedRoute from "./ProtectedRoute";
 import AppLayout from "../layouts/AppLayout";
@@ -11,13 +10,13 @@ import Rutas from "../pages/Rutas";
 import Puntos from "../pages/Puntos";
 import Asignaciones from "../pages/Asignaciones";
 import RegistroConsumo from "../pages/RegistroConsumo";
+import Usuarios from "../pages/Usuarios";
 
 export const router = createBrowserRouter([
   // 👉 redirige raíz a /login
   { path: "/", element: <Navigate to="/login" replace /> },
 
   { path: "/login", element: <Login /> },
-  { path: "/register", element: <Register /> },
   { path: "/forgot-password", element: <ForgotPassword /> },
 
   // 👉 bloque protegido
@@ -34,6 +33,7 @@ export const router = createBrowserRouter([
           { path: "/puntos", element: <Puntos /> },
           { path: "/asignaciones", element: <Asignaciones /> },
           { path: "/registro-consumo", element: <RegistroConsumo /> },
+          { path: "/usuarios", element: <Usuarios /> },
         ],
       },
     ],
