@@ -56,6 +56,7 @@ export interface VehiculosPorTipo {
 
 // Vehículos por estado
 export interface VehiculosPorEstado {
+  [key: string]: any;
   disponibilidad: string;
   cantidad: number;
   porcentaje?: number;

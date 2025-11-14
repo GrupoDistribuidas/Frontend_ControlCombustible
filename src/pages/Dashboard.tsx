@@ -31,9 +31,6 @@ import type {
   ChoferesTotales,
   AsignacionesPorEstado,
   ConsumoPromedio,
-  ConsumoPorRuta,
-  PuntosPorTipo,
-  ConsumoPorTipoVehiculo,
 } from "../types/reports";
 
 import { ChartCard } from "../components/ChartCard"; // ← AQUÍ USAS TU NUEVO CHARTCARD
@@ -48,15 +45,11 @@ export default function Dashboard() {
   const [consumoPromedio, setConsumoPromedio] =
     useState<ConsumoPromedio | null>(null);
 
-  const [consumoPorRuta, setConsumoPorRuta] = useState<ConsumoPorRuta[]>([]);
   const [vehiculosPorTipo, setVehiculosPorTipo] = useState<VehiculosPorTipo[]>([]);
   const [vehiculosPorEstado, setVehiculosPorEstado] = useState<VehiculosPorEstado[]>([]);
   const [rutasPorProvincia, setRutasPorProvincia] = useState<RutasPorProvincia[]>([]);
   const [choferesTotales, setChoferesTotales] = useState<ChoferesTotales | null>(null);
   const [asignacionesPorEstado, setAsignacionesPorEstado] = useState<AsignacionesPorEstado[]>([]);
-  const [puntosPorTipo, setPuntosPorTipo] = useState<PuntosPorTipo[]>([]);
-  const [consumoPorTipoVehiculo, setConsumoPorTipoVehiculo] =
-    useState<ConsumoPorTipoVehiculo[]>([]);
 
   const loadReportsData = async () => {
     try {
@@ -70,9 +63,6 @@ export default function Dashboard() {
         rutasProv,
         choferesData,
         asignacionesEstado,
-        puntosTipoData,
-        consumoTipoVehiculoData,
-        consumoRutaData,
       ] = await Promise.all([
         reportsService.getKPIs(),
         reportsService.getConsumoPromedio(),
@@ -81,9 +71,6 @@ export default function Dashboard() {
         reportsService.getRutasPorProvincia(),
         reportsService.getChoferesTotales(),
         reportsService.getAsignacionesPorEstado(),
-        reportsService.getPuntosPorTipo(),
-        reportsService.getConsumoPorTipoVehiculo(),
-        reportsService.getConsumoPorRuta(),
       ]);
 
       setKpis(kpiData);
@@ -93,9 +80,6 @@ export default function Dashboard() {
       setRutasPorProvincia(rutasProv);
       setChoferesTotales(choferesData);
       setAsignacionesPorEstado(asignacionesEstado);
-      setPuntosPorTipo(puntosTipoData);
-      setConsumoPorTipoVehiculo(consumoTipoVehiculoData);
-      setConsumoPorRuta(consumoRutaData);
 
     } catch (error) {
       console.error("Error cargando dashboard", error);

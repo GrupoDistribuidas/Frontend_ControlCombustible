@@ -2,7 +2,6 @@ import jsPDF from "jspdf";
 
 export const exportChartToPDF = async (
   title: string,
-  chartContainerId: string,
   data?: any[]
 ) => {
   try {

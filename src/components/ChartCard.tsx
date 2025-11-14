@@ -25,7 +25,7 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   // 📌 Export PDF con gráfica incluida
   const handleExportPDF = async () => {
     try {
-      await exportChartToPDF(title, chartId, chartData);
+      await exportChartToPDF(title, chartData); // Solo dos argumentos
       toast.success("PDF generado con éxito");
     } catch (error) {
       console.error(error);

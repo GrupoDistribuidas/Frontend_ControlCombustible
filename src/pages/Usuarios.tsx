@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 import {
-  Users, Edit, Plus, Power, Search, X,
-  ChevronLeft, ChevronRight
+  Users, Edit, Plus, Power, Search, X
 } from "lucide-react";
 
 import TextField from "../components/TextField";
 import Button from "../components/Button";
 
 import { usersService } from "../services/users.service";
-import { ROLES, hasRole } from "../services/roles.service";
-import { useAuth } from "../context/AuthContext";
+import { ROLES } from "../services/roles.service";
 import type { User } from "../types/auth";
 
 import toast from "react-hot-toast";
@@ -22,7 +20,6 @@ import {
 import type { CreateUserRequest } from "../types/users";
 
 export default function Usuarios() {
-  const { user: currentUser } = useAuth();
   const [usuarios, setUsuarios] = useState<User[]>([]);
   const [loadingUsuarios, setLoadingUsuarios] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
