@@ -91,9 +91,6 @@ export default function Login() {
           <Link to="/forgot-password" className="hover:text-white transition">
             Forgot password?
           </Link>
-          <Link to="/register" className="hover:text-white transition">
-            Register
-          </Link>
         </div>
       </form>
     </AuthLayout>

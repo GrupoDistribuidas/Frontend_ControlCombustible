@@ -71,7 +71,6 @@ export default function ForgotPassword() {
 
         <div className="flex items-center justify-between text-sm text-slate-400">
           <Link to="/login" className="hover:text-white transition">Volver al login</Link>
-          <Link to="/register" className="hover:text-white transition">Register</Link>
         </div>
       </form>
     </AuthLayout>

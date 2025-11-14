@@ -1,7 +1,7 @@
-# TODO: Corregir error 500 al cambiar estado de asignaciones y mostrar estados en combos
-
-## Tareas Pendientes
-- [ ] Modificar `src/services/asignaciones.service.ts`: Cambiar `updateEstadoAsignacion` para recibir y enviar `estadoId` numérico en lugar de string.
-- [ ] Modificar `src/pages/Asignaciones.tsx`: Agregar reverse map para convertir nombres a IDs, actualizar `handleChangeEstado`, cambiar select value a ID y options a mostrar todos los estados con IDs.
-- [ ] Probar el cambio de estado a "Completa" para verificar que no haya error 500.
-- [ ] Verificar que los combos muestren correctamente los estados: 1 Asignada, 2 En Proceso, 3 Completa, 4 Cancelada, 5 Pausada.
+- [ ] Modify src/utils/exportChartPDF.ts to create a clean clone of the chart element
+- [ ] Implement OKLCH to RGB color conversion function
+- [ ] Traverse the cloned element and replace all OKLCH colors with RGB equivalents
+- [ ] Append clone off-screen to DOM for html2canvas rendering
+- [ ] Use html2canvas on the modified clone instead of the real UI element
+- [ ] Remove clone after rendering and clean up
+- [ ] Test PDF export to verify correct color rendering

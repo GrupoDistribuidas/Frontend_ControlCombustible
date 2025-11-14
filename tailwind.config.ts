@@ -18,3 +18,19 @@ export default {
   },
   plugins: [],
 } satisfies Config;
+module.exports = {
+  theme: {
+    extend: {},
+  },
+  experimental: {
+    colorOptimization: true,
+  },
+  corePlugins: {},
+  plugins: [],
+
+  future: {
+    disableColorOpacityUtilitiesByDefault: false,
+  }
+};
+
+
