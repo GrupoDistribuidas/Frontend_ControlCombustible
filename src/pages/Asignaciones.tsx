@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 import TextField from "../components/TextField";
 import AsignacionModal from "../components/AsignacionModal";
@@ -140,7 +141,28 @@ export default function Asignaciones() {
     try {
       await asignacionesService.updateEstadoAsignacion(id, nuevoEstado);
       await loadData();
-    } catch (e) {
+      toast.success("Estado de asignación actualizado correctamente");
+    } catch (e: any) {
+      let msg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.response?.data?.detail ||
+        e?.message ||
+        "Error al cambiar el estado de la asignación";
+      if (msg.toLowerCase().includes("no puede cambiar")) {
+        msg = "No es posible cambiar a ese estado desde el estado actual.";
+      } else if (msg.toLowerCase().includes("fecha")) {
+        msg = "Falta la fecha o la fecha no es válida.";
+      } else if (msg.toLowerCase().includes("no permitido")) {
+        msg = "Cambio de estado no permitido.";
+      } else if (msg.toLowerCase().includes("no válido")) {
+        msg = "El estado seleccionado no es válido.";
+      } else if (msg.toLowerCase().includes("no existe")) {
+        msg = "El estado seleccionado no existe.";
+      } else if (msg.toLowerCase().includes("error interno")) {
+        msg = "Error interno del servidor. Contacte al administrador.";
+      }
+      toast.error(msg);
       console.error("Error al cambiar estado de asignación:", e);
     }
   };

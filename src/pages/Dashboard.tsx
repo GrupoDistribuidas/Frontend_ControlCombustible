@@ -19,6 +19,8 @@ import {
   Pie,
   Cell,
   Legend,
+  LineChart,
+  Line
 } from "recharts";
 
 import { reportsService } from "../services/reports.service";
@@ -31,12 +33,21 @@ import type {
   ChoferesTotales,
   AsignacionesPorEstado,
   ConsumoPromedio,
+  DesviacionCombustible
 } from "../types/reports";
 
 import { ChartCard } from "../components/ChartCard"; // ← AQUÍ USAS TU NUEVO CHARTCARD
 import toast from "react-hot-toast";
 
 const COLORS = ["#22c55e", "#3b82f6", "#f97316", "#e11d48", "#a855f7"];
+
+const ESTADOS_ASIGNACION = [
+  "Asignada",
+  "En Proceso",
+  "Completada",
+  "Cancelada",
+  "Pausada"
+];
 
 export default function Dashboard() {
   const [loading, setLoading] = useState(false);
@@ -50,6 +61,7 @@ export default function Dashboard() {
   const [rutasPorProvincia, setRutasPorProvincia] = useState<RutasPorProvincia[]>([]);
   const [choferesTotales, setChoferesTotales] = useState<ChoferesTotales | null>(null);
   const [asignacionesPorEstado, setAsignacionesPorEstado] = useState<AsignacionesPorEstado[]>([]);
+  const [desviacionesCombustible, setDesviacionesCombustible] = useState<DesviacionCombustible[]>([]);
 
   const loadReportsData = async () => {
     try {
@@ -63,6 +75,7 @@ export default function Dashboard() {
         rutasProv,
         choferesData,
         asignacionesEstado,
+        desviacionesData
       ] = await Promise.all([
         reportsService.getKPIs(),
         reportsService.getConsumoPromedio(),
@@ -71,6 +84,7 @@ export default function Dashboard() {
         reportsService.getRutasPorProvincia(),
         reportsService.getChoferesTotales(),
         reportsService.getAsignacionesPorEstado(),
+        reportsService.getDesviacionesCombustible()
       ]);
 
       setKpis(kpiData);
@@ -80,6 +94,7 @@ export default function Dashboard() {
       setRutasPorProvincia(rutasProv);
       setChoferesTotales(choferesData);
       setAsignacionesPorEstado(asignacionesEstado);
+      setDesviacionesCombustible(desviacionesData);
 
     } catch (error) {
       console.error("Error cargando dashboard", error);
@@ -126,9 +141,34 @@ export default function Dashboard() {
     Distancia_Total: r.distanciaTotal,
   }));
 
-  const asignacionesPorEstadoExport = asignacionesPorEstado.map((a) => ({
+  const asignacionesPorEstadoCompleto = ESTADOS_ASIGNACION.map((estado) => {
+    const encontrado = asignacionesPorEstado.find((a) => a.estadoNombre === estado);
+    return {
+      estadoNombre: estado,
+      totalAsignaciones: encontrado ? encontrado.totalAsignaciones : 0,
+    };
+  });
+
+  const asignacionesPorEstadoExport = asignacionesPorEstadoCompleto.map((a) => ({
     Estado: a.estadoNombre,
     Total_Asignaciones: a.totalAsignaciones,
+  }));
+
+  // Agrupar datos de desviaciones por vehículo
+  const consumoPorVehiculo = desviacionesCombustible.reduce((acc, d) => {
+    if (!acc[d.vehiculoNombre]) {
+      acc[d.vehiculoNombre] = { vehiculo: d.vehiculoNombre, estimado: 0, real: 0, count: 0 };
+    }
+    acc[d.vehiculoNombre].estimado += d.combustibleEstimado;
+    acc[d.vehiculoNombre].real += d.combustibleReal;
+    acc[d.vehiculoNombre].count += 1;
+    return acc;
+  }, {} as Record<string, { vehiculo: string; estimado: number; real: number; count: number }>);
+
+  const consumoPorVehiculoData = Object.values(consumoPorVehiculo).map((v) => ({
+    vehiculo: v.vehiculo,
+    estimado: v.count ? v.estimado / v.count : 0,
+    real: v.count ? v.real / v.count : 0,
   }));
 
   return (
@@ -275,20 +315,74 @@ export default function Dashboard() {
           title="Asignaciones por Estado"
           chartData={asignacionesPorEstadoExport}
         >
-          {asignacionesPorEstado.length === 0 ? (
+          {asignacionesPorEstadoCompleto.length === 0 ? (
             <EmptyChartMessage />
           ) : (
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={asignacionesPorEstado}>
-                <XAxis dataKey="estadoNombre" stroke="#94a3b8" />
+              <BarChart data={asignacionesPorEstadoCompleto}>
+                <XAxis dataKey="estadoNombre" stroke="#94a3b8" interval={0} />
                 <YAxis stroke="#94a3b8" />
                 <Tooltip />
                 <Bar dataKey="totalAsignaciones">
-                  {asignacionesPorEstado.map((_, i) => (
+                  {asignacionesPorEstadoCompleto.map((_, i) => (
                     <Cell key={i} fill={COLORS[i % COLORS.length]} />
                   ))}
                 </Bar>
               </BarChart>
+            </ResponsiveContainer>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          title="Diferencia de Combustible por Ruta"
+          chartData={desviacionesCombustible}
+        >
+          {desviacionesCombustible.length === 0 ? (
+            <EmptyChartMessage />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs text-slate-200">
+                <thead>
+                  <tr>
+                    <th className="px-2 py-1">Ruta</th>
+                    <th className="px-2 py-1">Vehículo</th>
+                    <th className="px-2 py-1">Estimado (gal)</th>
+                    <th className="px-2 py-1">Real (gal)</th>
+                    <th className="px-2 py-1">Diferencia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {desviacionesCombustible.map((d, i) => (
+                    <tr key={i} className="border-b border-slate-700/60">
+                      <td className="px-2 py-1">{d.rutaNombre}</td>
+                      <td className="px-2 py-1">{d.vehiculoNombre}</td>
+                      <td className="px-2 py-1 text-right">{d.combustibleEstimado.toFixed(2)}</td>
+                      <td className="px-2 py-1 text-right">{d.combustibleReal.toFixed(2)}</td>
+                      <td className="px-2 py-1 text-right">{(d.combustibleReal - d.combustibleEstimado).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </ChartCard>
+
+        <ChartCard
+          title="Consumo Estimado vs Real por Vehículo"
+          chartData={consumoPorVehiculoData}
+        >
+          {consumoPorVehiculoData.length === 0 ? (
+            <EmptyChartMessage />
+          ) : (
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={consumoPorVehiculoData}>
+                <XAxis dataKey="vehiculo" stroke="#94a3b8" interval={0} angle={-20} textAnchor="end" height={60} />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="estimado" name="Estimado" stroke="#3b82f6" strokeWidth={2} />
+                <Line type="monotone" dataKey="real" name="Real" stroke="#22c55e" strokeWidth={2} />
+              </LineChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
