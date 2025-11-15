@@ -8,8 +8,6 @@ import { UserCheck, X, Calendar, Truck, User, Route } from "lucide-react";
 import {
   AsignacionCreateSchema as BaseAsignacionCreateSchema,
   AsignacionUpdateSchema as BaseAsignacionUpdateSchema,
-  type AsignacionCreateInput,
-  type AsignacionUpdateInput,
 } from "../validation/asignaciones";
 import { asignacionesService } from "../services/asignaciones.service";
 import TextField from "./TextField";
