@@ -6,3 +6,13 @@
   --tw-bg-opacity: 1 !important;
   --tw-text-opacity: 1 !important;
 }
+
+.export-pdf-compatible * {
+  /* Forzar colores compatibles para html2canvas (evita oklch) */
+  color: #e5e7eb !important;
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+.export-pdf-compatible {
+  background: #0f172a !important;
+}

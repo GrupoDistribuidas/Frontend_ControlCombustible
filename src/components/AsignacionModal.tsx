@@ -2,18 +2,24 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
+import { z } from "zod";
 
 import { UserCheck, X, Calendar, Truck, User, Route } from "lucide-react";
 import {
-  AsignacionCreateSchema,
-  AsignacionUpdateSchema,
-  type AsignacionCreateInput,
-  type AsignacionUpdateInput,
+  AsignacionCreateSchema as BaseAsignacionCreateSchema,
+  AsignacionUpdateSchema as BaseAsignacionUpdateSchema,
 } from "../validation/asignaciones";
 import { asignacionesService } from "../services/asignaciones.service";
 import TextField from "./TextField";
 import Button from "./Button";
 import type { Asignacion, Ruta, Chofer, Vehicle } from "../types/asignaciones";
+
+const AsignacionCreateSchema = BaseAsignacionCreateSchema.extend({
+  fechaAsignacion: z.string().min(1, "La fecha de asignación es obligatoria"),
+});
+const AsignacionUpdateSchema = BaseAsignacionUpdateSchema.extend({
+  fechaAsignacion: z.string().min(1, "La fecha de asignación es obligatoria"),
+});
 
 export interface AsignacionModalProps {
   isOpen: boolean;
@@ -23,6 +29,14 @@ export interface AsignacionModalProps {
   choferes: Chofer[];
   vehiculos: Vehicle[];
   onSuccess?: () => void;
+}
+
+// Define un tipo local para el formulario con fechaAsignacion obligatoria
+interface AsignacionForm {
+  rutaId: number;
+  choferId: number;
+  vehiculoId: number;
+  fechaAsignacion: string;
 }
 
 export default function AsignacionModal({
@@ -44,7 +58,7 @@ export default function AsignacionModal({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<AsignacionCreateInput | AsignacionUpdateInput>({
+  } = useForm<AsignacionForm>({
     resolver: zodResolver(isEditing ? AsignacionUpdateSchema : AsignacionCreateSchema),
     defaultValues: {
       rutaId: 0,
@@ -76,7 +90,7 @@ export default function AsignacionModal({
     }
   }, [isOpen, isEditing, editingAsignacion, reset]);
 
-  const onSubmit = async (data: AsignacionCreateInput | AsignacionUpdateInput) => {
+  const onSubmit = async (data: AsignacionForm) => {
     try {
       setServerError(null);
       setOkMsg(null);
@@ -105,6 +119,8 @@ export default function AsignacionModal({
         msg = "❌ Error de configuración: Los estados requeridos no están disponibles en la base de datos.";
       } else if (msg.includes("Error interno al crear asignación")) {
         msg = "❌ Error interno del servidor al crear la asignación. Contacte al administrador.";
+      } else if (msg.toLowerCase().includes("fecha")) {
+        msg = "❌ Debe ingresar una fecha de asignación válida.";
       }
 
       setServerError(msg);

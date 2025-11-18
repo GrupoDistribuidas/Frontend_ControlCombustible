@@ -1,7 +1,7 @@
 import React, { useId } from "react";
 import { FileText, FileSpreadsheet } from "lucide-react";
 import Button from "./Button";
-import { exportChartToPDF } from "../utils/exportChartPDF";
+import { exportChartToPDFPro } from "../utils/exportChartPDFPro";
 import { exportToExcel, formatChartDataForExport } from "../utils/exportUtils";
 import toast from "react-hot-toast";
 
@@ -22,14 +22,16 @@ export const ChartCard: React.FC<ChartCardProps> = ({
   // ID único del contenedor del gráfico
   const chartId = useId().replace(/:/g, "_");
 
-  // 📌 Export PDF con gráfica incluida
-  const handleExportPDF = async () => {
+  // 📌 Export PDF profesional con gráfica como imagen
+  const handleExportPDFPro = async () => {
     try {
-      await exportChartToPDF(title, chartData); // Solo dos argumentos
-      toast.success("PDF generado con éxito");
+      // Guardar los datos en window para el exportador
+      (window as any).__lastChartData = chartData;
+      await exportChartToPDFPro(chartId, title);
+      toast.success("PDF profesional generado con éxito");
     } catch (error) {
       console.error(error);
-      toast.error("Error al generar PDF");
+      toast.error("Error al generar PDF profesional");
     }
   };
 
@@ -54,12 +56,12 @@ export const ChartCard: React.FC<ChartCardProps> = ({
 
         <div className="flex gap-2">
           <Button
-            onClick={handleExportPDF}
+            onClick={handleExportPDFPro}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30"
+            className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-blue-500 text-white border-none shadow-md hover:brightness-110"
           >
             <FileText className="w-4 h-4" />
-            PDF
+            PDF Pro
           </Button>
 
           <Button
